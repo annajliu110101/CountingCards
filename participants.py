@@ -7,6 +7,8 @@ from cards import Hand
 from playingcards import PlayingCard
 from strategy import Strategy
 
+from _utils import flash_line
+
 class Participant:
   def __init__(self, name:str, chips:int):
     self.name = name
