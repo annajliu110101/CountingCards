@@ -1,10 +1,11 @@
-from typing import Dict
+from typing import Dict, Optional, Union
 
 import pandas as pd
 from IPython.display import HTML, DisplayHandle, display
 
 from cards import Hand
 from playingcards import PlayingCard
+from strategy import Strategy
 
 class Participant:
   def __init__(self, name:str, chips:int):
