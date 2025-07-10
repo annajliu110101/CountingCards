@@ -7,6 +7,7 @@ from IPython.display import HTML, DisplayHandle, display
 from playingcards import DefaultCardComparer, BlackjackCardComparer
 from participants import BlackjackPlayer, Dealer
 from cards import Shoe
+
 class Game(ABC):
   def __init__(self, players:List[BlackjackPlayer], dealer:Optional[Dealer] = None, comparer = DefaultCardComparer):
     self.pool = 0
@@ -228,7 +229,7 @@ class Blackjack(Game):
       if not p.is_blackjack():
         continue
 
-      p._stood = True
+      p.stand()
       if peek is None:
         peek = self.dealer.peek()
 
