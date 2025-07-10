@@ -39,7 +39,7 @@ class Participant:
     return self.chips > 0
 
   def _set_scoreboard(self, commands:Dict) -> None:
-    self._scoreboard = pd.DataFrame(commands)
+    self._scoreboard = pd.DataFrame([commands])
 
   def _add_scoreboard(self, commands:Dict) -> None:
     self._scoreboard = pd.concat([self._scoreboard, self._set_scoreboard(commands)])
@@ -62,7 +62,7 @@ class Participant:
     return self._settled
 
   def reset(self) -> None:
-    self.hand = Hand()
+    self._hand = Hand()
     self.current_bet = 0
     self._settled = True
     self._skip_game = False
@@ -167,17 +167,19 @@ class BlackjackPlayer(Participant):
     self._update_display()
 
   ############### status functions #############
-  def is_done(self, verbose = True) -> bool:
-    if self._lost:
+   def is_done(self, verbose = True) -> bool:
+    if not verbose:
+      return (self.is_waiting() or self.is_bust() or self.is_blackjack()) and not self.is_21()
+    if self.is_bust():
       flash_line(f"{self.name} has lost, skipping...")
       return True
-    if not self.is_waiting():
+    if not self.is_waiting() and self.is_21():
       flash_line(f"{self.name} has already won blackjack, skipping...")
       return True
-    if self.is_21():
+    if self.is_21() and self.is_waiting():
       flash_line(f"{self.name} has already won, skipping...")
       return True
-    if not self.is_21():
+    if not self.is_21() and self.is_waiting():
       flash_line(f"{self.name} has stood, skipping...")
       return True
 
@@ -229,8 +231,14 @@ class Dealer(BlackjackPlayer):
   def _get_hole_card(self) -> PlayingCard:
     return self.hand[1]
 
-  def is_done(self) -> bool:
+  def is_done(self):
+    if self.score < self._stand_on:
+      return False
     super().is_done(verbose = False)
+
+  def reset(self):
+    super().reset()
+    self._reveal = False
 
 ############### PUBLIC FUNCTIONS #####################
   def peek(self) -> bool:
