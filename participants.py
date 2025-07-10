@@ -1,7 +1,13 @@
-# @title Participant
-class Participant():
+from typing import Dict
 
-  def __init__(self, name, chips):
+import pandas as pd
+from IPython.display import HTML, DisplayHandle, display
+
+from cards import Hand
+from playingcards import PlayingCard
+
+class Participant:
+  def __init__(self, name:str, chips:int):
     self.name = name
     self.chips = chips
     self._hand = Hand()
@@ -18,74 +24,74 @@ class Participant():
 
   # current bet is 0 when settled
 
-  def is_waiting(self):
+  def is_waiting(self) -> bool:
     # not settled == their outcome has not been determined yet, skip_rounds == they're no longer drawing -> either they've won (not blackjack), or have stood
     return not self._settled and self._skip_rounds
 
-  def is_playing(self):
+  def is_playing(self) -> bool:
     return not self._settled and not self._skip_game and not self._skip_round
 
-  def is_watching(self):
+  def is_watching(self) -> bool:
     return self._skip_game
 
-  def is_eligible(self):
+  def is_eligible(self) -> bool:
     return self.chips > 0
 
-  def _set_scoreboard(self, commands:Dict):
+  def _set_scoreboard(self, commands:Dict) -> None:
     self._scoreboard = pd.DataFrame(commands)
 
-  def _add_scoreboard(self, commands:Dict):
+  def _add_scoreboard(self, commands:Dict) -> None:
     self._scoreboard = pd.concat([self._scoreboard, self._set_scoreboard(commands)])
 
-  def _update_display(self):
+  def _update_display(self) -> None:
     self.display_handle.update(HTML(self._scoreboard.to_html(escape=False)))
 
   def display(self): pass
 
-  def _bet(self, bet):
+  def _bet(self, bet:int) -> int:
     self._settled = False
     self.current_bet = bet
     self.chips -= bet
     return bet
 
-  def show_hand(self):
+  def show_hand(self) -> str:
     print(self.hand)
 
-  def is_settled(self):
+  def is_settled(self) -> bool:
     return self._settled
 
-  def reset(self):
+  def reset(self) -> None:
     self.hand = Hand()
     self.current_bet = 0
     self._settled = True
     self._skip_game = False
     self._skip_round = False
 
-  def settle(self, winnings = 0):
+  def settle(self, winnings:int = 0) -> None:
     self.add_chips(winnings)
     self._settled = True
     self._skip_rounds = True
 
-  def buy_chips(self, payment):
+  def buy_chips(self, payment:int) -> None:
     if payment > 0:
       self.chips += payment
     else:
       raise ValueError("Payment must be a positive integer")
 
-  def add_chips(self, payment):
+  def add_chips(self, payment:int) -> None:
     self.chips += payment
 
   @property
-  def score(self):
+  def score(self) -> int:
     return self.hand.score
 
-  def get_hand(self, view:bool = True) -> str:
+  def get_hand(self, view:bool = True) -> Union[str, Hand]:
     if view:
       return self.hand.cards
     return self.hand
 
   @property
-  def true_score(self):
+  def true_score(self) -> int:
       totals = {0}
       for card in self.hand:
         new_totals = set()
@@ -105,24 +111,24 @@ class Participant():
 
 
 class BlackjackPlayer(Participant):
-  def __init__(self, name, chips = 1000, strategy = None):
+  def __init__(self, name, chips = 1000, strategy: Optional[Strategy] = None):
     super().__init__(name, chips)
     self._strategy = strategy
 
     self._lost = False
 
-  def has_strategy(self):
+  def has_strategy(self) -> bool:
     return self._strategy is not None
 
   @property
-  def strategy(self):
+  def strategy(self) -> Strategy:
     return self._strategy
 
   @strategy.setter
-  def set_strategy(self, strategy):
+  def set_strategy(self, strategy) -> None:
     self._strategy = strategy
 
-  def hit(self, card:PlayingCard):
+  def hit(self, card:PlayingCard) -> PlayingCard:
     self.hand.add(card)
 
     if self.is_bust():
@@ -130,18 +136,19 @@ class BlackjackPlayer(Participant):
       self.settle()
 
     self.display()
+    return card
 
   def stand(self) -> None:
     self._skip_rounds = True
 
   @property
-  def _stood(self):
+  def _stood(self) -> bool:
     return self._skip_rounds
 
   def bet(self, bid) -> int:
     return super()._bet(bid)
 
-  def _set_scoreboard(self):
+  def _set_scoreboard(self) -> None :
     super()._set_scoreboard({
             "Names": self.name,
             "Hands": self.get_hand(),
@@ -151,10 +158,10 @@ class BlackjackPlayer(Participant):
             "Active": not self.is_done()
         })
 
-  def _add_scoreboard(self):
+  def _add_scoreboard(self) -> None:
     super()._add_scoreboard(self._commands)
 
-  def display(self):
+  def display(self) -> None:
     self._set_scoreboard()
     self._update_display()
 
@@ -176,11 +183,11 @@ class BlackjackPlayer(Participant):
     return False
 
 
-  def reset(self):
+  def reset(self) -> None:
     super().reset()
     self._lost = False
 
-  def is_blackjack(self):
+  def is_blackjack(self) -> bool:
     """
     Checks if the hand is a blackjack (an Ace and a 10-value card).
     """
@@ -207,7 +214,7 @@ class Dealer(BlackjackPlayer):
     self._stand_on = stand_on
 ############### PRIVATE FUNCTIONS ###############
   @property
-  def hand(self):
+  def hand(self) -> Hand:
     return self._hand
 
   def hit(self, card:PlayingCard):
@@ -215,17 +222,17 @@ class Dealer(BlackjackPlayer):
        card.hide()
     super().hit(card)
 
-  def _get_up_card(self):
+  def _get_up_card(self) -> PlayingCard:
     return self.hand[0]
 
-  def _get_hole_card(self):
+  def _get_hole_card(self) -> PlayingCard:
     return self.hand[1]
 
-  def is_done(self):
+  def is_done(self) -> bool:
     super().is_done(verbose = False)
 
 ############### PUBLIC FUNCTIONS #####################
-  def peek(self):
+  def peek(self) -> bool:
     if self._reveal or not self._get_up_card().is_facecard():
       return False
 
@@ -235,7 +242,7 @@ class Dealer(BlackjackPlayer):
 
     return False
 
-  def reveal(self):
+  def reveal(self) -> PlayingCard:
     if self._reveal:
       return
 
@@ -245,3 +252,4 @@ class Dealer(BlackjackPlayer):
 
     if self.is_bust():
       self._lost = True
+    return card
