@@ -1,11 +1,14 @@
-# @title Strategy
+from abc import ABC, abstractmethod
+from participants import Player, Dealer
+from game import Game
+
 class Strategy(ABC):
     """
     Abstract base class for decision-making algorithms.
     Students can create new strategies by subclassing this.
     """
     @abstractmethod
-    def decide(self, player, game):
+    def decide(self, player:Player, game:Game):
         """
         Implement this method to define how a player should act.
         It should call player.hit() or player.stand() as needed.
@@ -13,7 +16,7 @@ class Strategy(ABC):
         pass
 
 class GeneralStrategy(Strategy):
-  def decide(self, player, game):
+  def decide(self, player:Player, game:Game) -> None:
     if player.score < 17:
       game._hit(player)
     else:
@@ -23,6 +26,6 @@ class GeneralStrategy(Strategy):
 
 class YourStrategy(Strategy):
 
-  def decide(self, player, game):
+  def decide(self, player:Player, game:Game) -> None:
     pass
 
