@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import pandas as pd
 from IPython.display import HTML, DisplayHandle, display
@@ -10,8 +10,8 @@ from cards import Shoe
 
 class Game(ABC):
   def __init__(self, players:List[BlackjackPlayer], dealer:Optional[Dealer] = None, comparer = DefaultCardComparer):
-    self.pool = 0
-    self.round = 0
+    self._pool = 0
+    self._round = 0
     self._game = 0
 
     self._players = players
@@ -19,8 +19,9 @@ class Game(ABC):
     
     self._all_active_players = [dealer] + players
     self._active_players = players
-    self._inactive_players = []    
-    self.deck = None
+    self._inactive_players: = []    
+    self._deck = None
+    self._round_results: List[Dict] = []
     self._handle = display(DisplayHandle(), display_id=True)
 
 ###### Getters #######    
@@ -38,6 +39,22 @@ class Game(ABC):
     
   def get_pending(self): return [p for p in self._active_players if p.is_waiting()]
 
+  def play_round(self):
+    self._game += 1
+    self.before_round()
+    print("Placing Bets...")
+    print("-----------------")
+    self.take_bets()
+    print("-----------------\n")
+
+    self.deal_opening()
+    self.loop_turns()
+    print("Payout....")
+    self.settle()
+
+    self.after_round()
+    print("-----------------\n")
+    
   def check_eligible_players(self, player):
     if not player.is_eligible():
       self._inactive_players.append(player)
@@ -46,10 +63,6 @@ class Game(ABC):
       return False
     return True
   
-
-  
-######## Game Functions ###########
-
   def _prompt_bet(self, player):
       """
       Loop until we get a valid integer within the player’s stack.
@@ -76,25 +89,11 @@ class Game(ABC):
     for player in self._active_players:
       
       bet = self._prompt_bet(player)
-      self.pool += bet
+      self._pool += bet
 
-    self.pool += self.dealer.bet(self.pool)
+    self._pool += self._dealer.bet(self._pool)
 
-  def play_round(self):
-    self._game += 1
-    self.before_round()
-    print("Placing Bets...")
-    print("-----------------")
-    self.take_bets()
-    print("-----------------\n")
-
-    self.deal_opening()
-    self.loop_turns()
-    print("Payout....")
-    self.settle()
-
-    self.after_round()
-    print("-----------------\n")
+  
     
   def next(self, player, verbose = False):
     if player.has_strategy():
@@ -126,11 +125,11 @@ class Game(ABC):
 
 class Blackjack(Game):
   def __init__(self, players:List[BlackjackPlayer]):
-    self.dealer = Dealer()
-    super().__init__(players, self.dealer, BlackjackCardComparer)
+    self._dealer = Dealer()
+    super().__init__(players, self._dealer, BlackjackCardComparer)
 
   def deal(self, player, verbose = True):
-    card = self.deck.draw()
+    card = self._deck.draw()
     player.hit(card)    
     if verbose:
       print(f"{player.name} drew {str(card)}")
@@ -143,17 +142,17 @@ class Blackjack(Game):
     player.stand()
 
   def before_round(self):
-    if not self.deck:
-        self.deck = Shoe()
+    if not self._deck:
+        self._deck = Shoe()
 
-    self.pot = 0
-    self.round = 0
+    self._pot = 0
+    self._round = 0
 
   def deal_opening(self):
     print("Dealing First Two Cards....")
     print("-----------------")
     for _ in range(2):
-      self.round += 1
+      self._round += 1
       for p in self._all_active_players:
           self.deal(p)
 
@@ -166,7 +165,7 @@ class Blackjack(Game):
 
       p.stand()
       if peek is None:
-        peek = self.dealer.peek()
+        peek = self._dealer.peek()
 
       if not peek:
           winnings = self._payout(p, "blackjack")
@@ -182,16 +181,16 @@ class Blackjack(Game):
       print("-----------------\n")
 
     print("------------------")
-    self.dealer.reveal()
+    self._dealer.reveal()
 
-    while self.dealer.is_playing():
-      self.next(self.dealer)
+    while self._dealer.is_playing():
+      self.next(self._dealer)
     print("-----------------\n")
 
   def _play_round(self, active_players:List[BlackjackPlayer]):
-    self.round += 1
+    self._round += 1
     
-    print(f"Round {self.round}:")
+    print(f"Round {self._round}:")
     
     for p in active_players:
       self.next(p)
@@ -202,11 +201,11 @@ class Blackjack(Game):
   def settle(self):
     pending_players = self.get_pending()
 
-    if self.dealer.is_bust():
+    if self._dealer.is_bust():
       for player in pending_players:
         self._payout(player, "win")
 
-    elif self.dealer.score < 21:
+    elif self._dealer.score < 21:
       for player in pending_players:
         outcome = self.compare(player.hand)
         self._payout(player, outcome)
@@ -218,13 +217,13 @@ class Blackjack(Game):
         else:
           self._payout(player, "loser")
 
-    self.dealer.chips += self.pool
+    self._dealer.chips += self._pool
     print("Game Over")
   
   def compare(self, player_hand):
-    if player_hand > self.dealer.hand:
+    if player_hand > self._dealer.hand:
       return "win"
-    elif player_hand < self.dealer.hand:
+    elif player_hand < self._dealer.hand:
       return "lose"
     else:
       return "push"
@@ -250,8 +249,13 @@ class Blackjack(Game):
       pass
 
     player.settle(winnings)
-    self.pool -= winnings
+    self._pool -= winnings
     print(out_message)
+    self._round_results.append({
+            "game": self._game,
+            "player": player.name,
+            "outcome": outcome
+        })
     return winnings
     
   def after_round(self):
