@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from participants import Player, Dealer
+from participants import BlackjackPlayer, Dealer
 from game import Game
 
 class Strategy(ABC):
@@ -8,7 +8,7 @@ class Strategy(ABC):
     Students can create new strategies by subclassing this.
     """
     @abstractmethod
-    def decide(self, player:Player, game:Game):
+    def decide(self, player: BlackjackPlayer, game: Game):
         """
         Implement this method to define how a player should act.
         It should call player.hit() or player.stand() as needed.
@@ -16,10 +16,10 @@ class Strategy(ABC):
         pass
 
 class DealerStrategy(Strategy):
-  def __init__(player:Player):
-      self.player = player
-  def decide(self, game, verbose = False) -> None:
-    if self.player.score < 17:
+  def __init__(player:Dealer):
+      self._player = player
+  def decide(self, game: Game, verbose: bool = False) -> None:
+    if self._player.score < 17:
       game.deal(self._player, verbose = verbose)
     else:
       game.skip(self._player, verbose = verbose)
@@ -28,6 +28,6 @@ class DealerStrategy(Strategy):
 
 class YourStrategy(Strategy):
 
-  def decide(self, player:Player, game:Game) -> None:
+  def decide(self, player:BlackjackPlayer, game:Game) -> None:
     pass
 
