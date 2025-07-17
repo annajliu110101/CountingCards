@@ -198,6 +198,21 @@ class Stats:
     def counter_df(self, mode = ""):
         rank_counts = self.counter(mode)
         return pd.Series(rank_counts, dtype=int).reindex(ALL_RANKS, fill_value=0).to_frame().T
+
+    def count_all_cards_dealt(self, nice_print_format = False):
+        if nice_print_format:
+            return self.counter_df(mode = "faceup")
+        return self.counter(mode = "faceup")
+
+    def count_remaining_cards(self, nice_print_format = False):
+        if nice_print_format:
+            return self.counter_df(mode = "facedown")
+        return self.counter(mode = "facedown")
+
+    def count_values(self,  nice_print_format = False):
+        if nice_print_format:
+            return self.counter_df(mode = "values")
+        return self.counter(mode = "values")
       
     def counter(self, mode = ""):
         counts = defaultdict(int)
