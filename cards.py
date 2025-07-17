@@ -11,119 +11,93 @@ from IPython.display import DisplayHandle, display
 
 from _utils import CardInfo
 from playingcards import PlayingCard, DefaultCardComparer, BlackjackCardComparer
+
 class Hand():
-  def __init__(self):
-    self._cards = []
+  def __init__(self, cards = None):
+    self._cards = cards if cards else []
 
-  def __len__(self):
-    return len(self._cards)
+  def __len__(self): return len(self._cards)
 
-  def __getitem__(self, position):
-    return self._cards[position]
+  def __getitem__(self, position): return self._cards[position]
 
-  def __iter__(self):
-    return iter(self._cards)
+  def __iter__(self): return iter(self._cards)
 
-  def __str__(self):
-    return ", ".join([str(card) for card in self._cards])
+  def __str__(self): return ", ".join([str(card) for card in self._cards])
 
-  def __eq__(self, other):
-    if isinstance(other, int):
-      return self.score == other
-    if isinstance(other, Hand):
-      return self.score == other.score
-    return NotImplemented
+  def _cmp(self, other, op):
+        s = self.score
+        o = other.score if isinstance(other, Hand) else int(other)
+        return op(s, o)
 
-  def __gt__(self, other):
-    if isinstance(other, int):
-      return self.score > other
-    if isinstance(other, Hand):
-      return self.score > other.score
-    return NotImplemented
+  def __eq__(self, other): return self._cmp(other, lambda a, b: a == b)
+  def __gt__(self, other): return self._cmp(other, lambda a, b: a >  b)
+  def __ge__(self, other): return self._cmp(other, lambda a, b: a >= b)
+  def __lt__(self, other): return self._cmp(other, lambda a, b: a <  b)
+  def __le__(self, other): return self._cmp(other, lambda a, b: a <= b)
 
-  def __ge__(self, other):
-    if isinstance(other, int):
-      return self.score >= other
-    if isinstance(other, Hand):
-      return self.score >= other.score
-    return NotImplemented
+  def reveal_all(self): [card.reveal() for card in self._cards if not card.faceup]
 
-  def __lt__(self, other):
-    if isinstance(other, int):
-      return self.score < other
-    if isinstance(other, Hand):
-      return self.score < other.score
-    return NotImplemented
-
-  def __le__(self, other):
-    if isinstance(other, int):
-      return self.score <= other
-    if isinstance(other, Hand):
-      return self.score <= other.score
-    return NotImplemented
-
-  def reveal_all(self):
-    for card in self._cards:
-      if not card.faceup:
-        card.reveal()
-
-  def hide_all(self):
-    for card in self._cards:
-      if card.faceup:
-        card.hide()
-
+  def hide_all(self): [card.hide() for card in self._cards if card.faceup]
+    
   def view(self):
-    def helper_html(fig):
-      buf = io.BytesIO()
-      fig.savefig(buf, format='png', bbox_inches='tight')
-      buf.seek(0)
-      img_bytes = buf.read()
-      base64_str = base64.b64encode(img_bytes).decode('utf-8')
-      plt.close(fig)
-      return base64_str
+      def helper_html(fig):
+          buf = io.BytesIO()
+          fig.savefig(buf, format='png', bbox_inches='tight')
+          buf.seek(0)
+          img_bytes = buf.read()
+          base64_str = base64.b64encode(img_bytes).decode('utf-8')
+          plt.close(fig)
+          return base64_str
 
-    fig, axes = plt.subplots(1, len(self._cards), figsize=(len(self._cards)*1.125, 1.5))
+      fig, axes = plt.subplots(1, len(self._cards), figsize=(len(self._cards)*1.125, 1.5))
+  
+      axes = axes.flat if isinstance(axes, np.ndarray) else [axes]
+      for ax, card in zip(axes, self._cards):
+          ax.imshow(plt.imread(card.get_img()))
+          ax.axis('off')
+  
+      return f'<img src="data:image/png;base64,{helper_html(fig)}" width="{len(self._cards)*60}px">'
 
-    axes = axes.flat if isinstance(axes, np.ndarray) else [axes]
-    for ax, card in zip(axes, self._cards):
-        ax.imshow(plt.imread(card.get_img()))
-        ax.axis('off')
+  def add(self, card:PlayingCard, faceup = True):
+      self._cards.append(card.reveal()) if faceup else self._cards.append(card.hide())      
 
-    return f'<img src="data:image/png;base64,{helper_html(fig)}" width="{len(self._cards)*60}px">'
+  def score_card(self, score_candidates, card):
+      new_totals = set()
+      for t in score_candidates:
+          for v in card.values:
+             new_totals.add(t + v)
+          score_candidates = new_totals
+      legal = [t for t in score_candidates if t <= 21]
+      return max(legal) if legal else min(score_candidates)
 
-  def add(self, card:PlayingCard):
-    self._cards.append(card)
-
-  def true_score(self):
+  def scoring_algorithm(self, ignore_hidden = True):
       totals = {0}
+      new_totals = set()
       for card in self._cards:
-        new_totals = set()
+        if ignore_hidden and not card.faceup:
+          continue
         for t in totals:
             for v in card.values:
                 new_totals.add(t + v)
         totals = new_totals
-      legal = [t for t in totals if t <= 21]
-      return max(legal) if legal else min(totals)
+      return totals
+    
+  
 
   def copy(self):
     return Hand([card.copy() for card in self._cards])
+    
+  def true_score(self):
+      totals = scoring_algorithm(ignore_hidden = False)
+      legal = [t for t in totals if t <= 21]
+      return max(legal) if legal else min(totals)
+    
   @property
   def score(self):
-        """
-        Return the highest score ≤ 21 (if any), otherwise the minimal score.
-        Handles any number of aces by trying all combos the cheap way.
-        """
-        totals = {0}
-        for card in self._cards:
-          if not card.faceup:
-            continue
-          new_totals = set()
-          for t in totals:
-              for v in card.values:
-                  new_totals.add(t + v)
-          totals = new_totals
+        legal = scoring_algorithm()
         legal = [t for t in totals if t <= 21]
         return max(legal) if legal else min(totals)
+
   @property
   def cards(self):
       return self.view()
@@ -133,25 +107,6 @@ class Hand():
 
   def clear(self):
     self._cards = []
-
-  def has_aces(self):
-    if "A" in self._cards:
-      return True
-    return False
-
-  def tryout(self, card:PlayingCard):
-    totals = {self.true_score()}
-    if not self.has_aces():
-      new_totals = set()
-      for t in totals:
-        for v in card.values:
-          new_totals.add(t + v)
-      totals = new_totals
-      return max(totals) <= 21
-
-    else:
-      new_hand = self.copy().add(card)
-      return new_hand.true_score() <= 21
 
   def _create_deck(self): pass
   def _append(self): pass
@@ -168,7 +123,6 @@ class Deck(Hand):
   You can draw cards one at a time.
   """
   def __init__(self, build:bool = True, comparer = DefaultCardComparer):
-
     self._comparer = comparer
     self._info = CardInfo.get_info()
     self._cards = self._create_deck() if build is True else []
@@ -203,59 +157,59 @@ class Deck(Hand):
 
 
 class Shoe(Deck):
-    def __init__(self, num_decks=1, shuffle_freq=0):
+    def __init__(self, num_decks=1):
         super().__init__(build=False, comparer=BlackjackCardComparer)
         self._num_decks = num_decks
-        self._shuffle_freq = shuffle_freq
-
+        self.reset()
+      
+  
+    def reset(self):
         self._cards = []
-        self._append(num_decks)
-        self.display_handle = display(DisplayHandle(), display_id=True)
-
-        # Counter of PlayingCard objects (one per rank, thanks to __hash__/__eq__)
-        self._freq = Counter(self._cards)
-    def frequency(self):
-        return self._freq
-
-    def draw(self):
-        card = super().draw()
-        self._freq[card] -= 1
-        return card
-
-    def _reset(self):
-        self._cards.clear()
         self._append(self._num_decks)
-        self._freq = Counter(self._cards)
+        self.stats = Stats(self._cards)
 
-class ShoeStats:
-    def __init__(self, shoe: Shoe, dealer):
-        self._shoe = shoe
-        self._dealer = dealer
-        # Use rank-card mapping for easy lookups
-        self._rank_cards = {card.rank: card for card in self._shoe._deck}
-        self._freq = shoe.frequency()
-        self._hole_card = None
+    @property
+    def stats(self):
+        return self.stats
+      
 
-    def update(self):
-        # Update hole_card reference based on dealer's hand
-        hole = self._dealer._get_hole_card()
-        if hole and not hole.faceup:
-            self._hole_card = hole
+
+class Stats:
+    def __init__(self, all_cards):
+        self._all_cards = all_cards        
+      
+    def outcome_odds(self, hand: Hand):
+        """Return bust/safe/blackjack odds if the player hits."""
+        bust = blackjack = safe = 0
+        curr_scores = set(hand.scoring_algorithm(ignore_hidden = False))
+      
+        for card, count in self.counter(mode="facedown").items():
+            if count <= 0:
+                continue
+            score = hand.score_card(curr_scores, card)
+            if score > 21:
+                bust += count
+            elif score == 21:
+                blackjack += count
+            else:
+                safe += count
+
+        return {
+            "bust": bust / total,
+            "safe": safe / total,
+            "blackjack": blackjack / total,
+        }
+
+    def counter_df(self, mode = ""):
+      rank_counts = self.counter(mode)
+      return pd.Series(rank_counts, dtype=int).reindex(ALL_RANKS, fill_value=0).to_frame().T
+      
+    def counter(self, mode = ""):
+        counts = defaultdict(int)
+        if mode == "faceup":
+            [counts[card] += 1 for card in self._all_cards if card.faceup()]
+        elif mode == "facedown":
+            [counts[card] += 1 for card in self._all_cards if not card.faceup()]
         else:
-            self._hole_card = None
-        # Always update freq and cards_left from shoe
-        self._freq = self._shoe.frequency()
-
-    def card_probs(self):
-        # Probability by rank, using a canonical card for each rank as key
-        probs = {}
-        for rank, card in self._rank_cards.items():
-            total_left = self._freq[card]
-            probs[rank] = total_left / self.cards_left if self.cards_left > 0 else 0
-        # Optionally adjust for unrevealed hole card if needed
-        # (Usually not necessary if you follow correct shoe/dealing logic)
-        return probs
-
-    def left_by_rank(self):
-        # Convenient dict for display: {rank: count}
-        return {rank: self._freq[card] for rank, card in self._rank_cards.items()}
+            [counts[card] += 1 for card in self._all_cards]
+        return counts
