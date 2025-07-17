@@ -1,12 +1,10 @@
 from typing import Dict, Optional, Union
-
 import pandas as pd
 from IPython.display import HTML, DisplayHandle, display
 
 from cards import Hand
 from playingcards import PlayingCard
 from strategy import Strategy
-
 from _utils import flash_line
 
 class Participant:
@@ -20,8 +18,9 @@ class Participant:
     self.current_bet = 0
 
     self._settled = True
-    self._skip_game = False
     self._skip_rounds = False
+    self._skip_game = False
+    
   # settled == Either lost or won blackjack (both will settle immediately)
   # skip rounds == Will skip being dealt cards
 
@@ -38,7 +37,13 @@ class Participant:
     return self._skip_game
 
   def is_eligible(self) -> bool:
-    return self.chips > 0
+    if self.chips > 0:
+      return True
+    self._skip_game = True
+    return False
+    
+  def is_settled(self) -> bool:
+    return self._settled
 
   def _set_scoreboard(self, commands:Dict) -> None:
     self._scoreboard = pd.DataFrame([commands])
@@ -49,20 +54,12 @@ class Participant:
   def _update_display(self) -> None:
     self.display_handle.update(HTML(self._scoreboard.to_html(escape=False)))
 
-  def display(self): pass
-
   def _bet(self, bet:int) -> int:
     self._settled = False
     self.current_bet = bet
     self.chips -= bet
     return bet
-
-  def show_hand(self) -> str:
-    print(self.hand)
-
-  def is_settled(self) -> bool:
-    return self._settled
-
+    
   def reset(self) -> None:
     self._hand = Hand()
     self.current_bet = 0
@@ -75,24 +72,21 @@ class Participant:
     self._settled = True
     self._skip_rounds = True
 
-  def buy_chips(self, payment:int) -> None:
-    if payment > 0:
-      self.chips += payment
-    else:
-      raise ValueError("Payment must be a positive integer")
-
   def add_chips(self, payment:int) -> None:
     self.chips += payment
-
-  @property
-  def score(self) -> int:
-    return self.hand.score
-
+  
+  def show_hand(self) -> str:
+    print(self.hand)
+    
   def get_hand(self, view:bool = True) -> Union[str, Hand]:
     if view:
       return self.hand.cards
     return self.hand
-
+  
+  @property
+  def score(self) -> int:
+    return self.hand.score
+    
   @property
   def true_score(self) -> int:
       totals = {0}
@@ -109,6 +103,7 @@ class Participant:
   def stand(self):pass
   def bet(self):pass
   def lost(self): pass
+  def display(self): pass
 
 
 
@@ -116,8 +111,8 @@ class Participant:
 class BlackjackPlayer(Participant):
   def __init__(self, name, chips = 1000, strategy: Optional[Strategy] = None):
     super().__init__(name, chips)
+    
     self._strategy = strategy
-
     self._lost = False
 
   def has_strategy(self) -> bool:
@@ -133,7 +128,7 @@ class BlackjackPlayer(Participant):
 
   def hit(self, card:PlayingCard) -> PlayingCard:
     self.hand.add(card)
-
+    
     if self.is_bust():
       self._lost = True
       self.settle()
@@ -193,9 +188,6 @@ class BlackjackPlayer(Participant):
     self._lost = False
 
   def is_blackjack(self) -> bool:
-    """
-    Checks if the hand is a blackjack (an Ace and a 10-value card).
-    """
     return len(self.hand.hand) == 2 and self.true_score == 21
 
 
@@ -210,6 +202,7 @@ class BlackjackPlayer(Participant):
   def _get_hole_card(self): pass
   def peek(self): pass
   def reveal(self): pass
+    
 class Dealer(BlackjackPlayer):
 
   def __init__(self, stand_on = 17):
