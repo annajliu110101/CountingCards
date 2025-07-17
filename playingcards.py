@@ -1,12 +1,10 @@
 from typing import Optional
 class DefaultCardComparer:
   @staticmethod
-  def equals(card1, card2):
-      return card1.code == card2.code
+  def equals(card1, card2):return card1.code == card2.code
 
   @staticmethod
-  def hash(card):
-      return hash(card.code)
+  def hash(card): return hash(card.code)
 
   @staticmethod
   def get_score(card):
@@ -19,12 +17,10 @@ class DefaultCardComparer:
 
 class BlackjackCardComparer:
   @staticmethod
-  def equals(card1, card2):
-      return card1.rank == card2.rank
+  def equals(card1, card2): return card1.rank == card2.rank
 
   @staticmethod
-  def hash(card):
-      return hash(card.rank)
+  def hash(card): return hash(card.rank)
 
   @staticmethod
   def get_score(card):
@@ -51,30 +47,19 @@ class PlayingCard():
     self._back = '/content/back.png'
 
   @property
-  def code(self):
-    return self._code
+  def code(self): return self._code
   @property
-  def name(self):
-    return self._name
+  def name(self): return self._name
   @property
-  def suit(self):
-    return self._suit
+  def suit(self): return self._suit
   @property
-  def symbol(self):
-    return self._symbol
+  def symbol(self): return self._symbol
   @property
-  def rank(self):
-    return self._rank
-
-  def __eq__(self, other):
-    return self._comparer.equals(self, other)
-
-  def __ne__(self, other):
-    return not self.__eq__(other)
-
-  def __hash__(self):
-    return self._comparer.hash(self)
-
+  def rank(self): return self._rank
+  def __eq__(self, other): return self._comparer.equals(self, other)
+  def __ne__(self, other): return not self.__eq__(other)
+  def __hash__(self): return self._comparer.hash(self)
+  
   def __str__(self):
     """
     When you print a card object, you get something like 'A♠' or '10♥'.  Or, if symbol_code was not specified, the actual code is supplemented.
@@ -83,11 +68,9 @@ class PlayingCard():
       return f"{self._code[:-1]}{self._symbol}" if self._faceup else '░░░░░░'
     return self._code if self._faceup else '░░░░░░'
 
-  def copy(self):
-    return PlayingCard(self._code, self._name, self._suit, self._symbol, self._faceup, self._comparer)
+  def copy(self): return PlayingCard(self._code, self._name, self._suit, self._symbol, self._faceup, self._comparer)
 
-  def get_score(self) -> int:
-      self._comparer.get_score(self)
+  def get_score(self) -> int: self._comparer.get_score(self)
 
   def flip(self):
     self._faceup = not self._faceup
@@ -108,16 +91,13 @@ class PlayingCard():
     return (self._comparer.get_score(self),)
 
   @property
-  def faceup(self):
-    return self._faceup
+  def faceup(self): return self._faceup
 
   def get_img(self):
     """
     Returns the raw image array you can show with matplotlib.
     """
-    if self._faceup:
-      return self._img
-    return self._back
+    return self._img if self._faceup else self._back
 
   def is_facecard(self):
     return self._name in ['jack', 'queen', 'king', 'ace']
