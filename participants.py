@@ -1,3 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from strategy import Strategy, DealerStrategy
+  
 from typing import Dict, Optional, Union
 import pandas as pd
 from IPython.display import HTML, DisplayHandle, display
@@ -79,15 +85,14 @@ class Participant:
 
 
 class BlackjackPlayer(Participant):
-  def __init__(self, name, chips = 1000, strategy: Optional[Strategy] = None):
+  def __init__(self, name, chips = 1000, strategy: Optional["Strategy"] = None):
     super().__init__(name, chips)
-    
     self._strategy = strategy
     self._lost = False
 
   def has_strategy(self) -> bool: return self._strategy is not None
   @property
-  def strategy(self) -> Strategy: return self._strategy
+  def strategy(self) -> "Strategy": return self._strategy
   @strategy.setter
   def set_strategy(self, strategy) -> None: self._strategy = strategy
 
@@ -121,8 +126,7 @@ class BlackjackPlayer(Participant):
     self._set_scoreboard()
     self._update_display()
 
-  ############### status functions #############
-   def is_done(self, verbose = True) -> bool:
+  def is_done(self, verbose = True) -> bool:
     if not verbose:
       return (self.is_waiting() or self.is_bust() or self.is_blackjack()) and not self.is_21()
     if self.is_bust():
@@ -156,10 +160,10 @@ class BlackjackPlayer(Participant):
     
 class Dealer(BlackjackPlayer):
   def __init__(self):
+    from strategy import DealerStrategy
     super().__init__("Dealer", 10000, DealerStrategy(self))
     self._reveal = False
-############### PRIVATE FUNCTIONS ##############
-
+    
   def hit(self, card:PlayingCard):
     if len(self._hand) == 1 and not self._reveal:
        card.hide()
