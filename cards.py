@@ -13,93 +13,87 @@ from _utils import CardInfo
 from playingcards import PlayingCard, DefaultCardComparer, BlackjackCardComparer
 
 class Hand():
-  def __init__(self, cards = None):
-    self._cards = cards if cards else []
-
-  def __len__(self): return len(self._cards)
-  def __getitem__(self, position): return self._cards[position]
-  def __iter__(self): return iter(self._cards)
-  def __str__(self): return ", ".join([str(card) for card in self._cards])
-
-  def _cmp(self, other, op):
-        s = self.score
-        o = other.score if isinstance(other, Hand) else int(other)
-        return op(s, o)
-
-  def __eq__(self, other): return self._cmp(other, lambda a, b: a == b)
-  def __gt__(self, other): return self._cmp(other, lambda a, b: a >  b)
-  def __ge__(self, other): return self._cmp(other, lambda a, b: a >= b)
-  def __lt__(self, other): return self._cmp(other, lambda a, b: a <  b)
-  def __le__(self, other): return self._cmp(other, lambda a, b: a <= b)
-
-  def reveal_all(self): [card.reveal() for card in self._cards if not card.faceup]
-  def hide_all(self): [card.hide() for card in self._cards if card.faceup]
-
-  def add(self, card:PlayingCard, faceup = True): self._cards.append(card.reveal()) if faceup else self._cards.append(card.hide()) 
-
+    def __init__(self, cards = None):
+        self._cards = cards if cards else []
   
-  def view(self):
-      def helper_html(fig):
-          buf = io.BytesIO()
-          fig.savefig(buf, format='png', bbox_inches='tight')
-          buf.seek(0)
-          img_bytes = buf.read()
-          base64_str = base64.b64encode(img_bytes).decode('utf-8')
-          plt.close(fig)
-          return base64_str
-
-      fig, axes = plt.subplots(1, len(self._cards), figsize=(len(self._cards)*1.125, 1.5))
+    def __len__(self): return len(self._cards)
+    def __getitem__(self, position): return self._cards[position]
+    def __iter__(self): return iter(self._cards)
+    def __str__(self): return ", ".join([str(card) for card in self._cards])
   
-      axes = axes.flat if isinstance(axes, np.ndarray) else [axes]
-      for ax, card in zip(axes, self._cards):
-          ax.imshow(plt.imread(card.get_img()))
-          ax.axis('off')
+    def _cmp(self, other, op):
+          s = self.score
+          o = other.score if isinstance(other, Hand) else int(other)
+          return op(s, o)
   
-      return f'<img src="data:image/png;base64,{helper_html(fig)}" width="{len(self._cards)*60}px">'
-
-  def scoring_algorithm(self, ignore_hidden = True):
-      totals = {0}
-      new_totals = set()
-      for card in self._cards:
-        if ignore_hidden and not card.faceup:
-          continue
-        for t in totals:
-            for v in card.values:
-                new_totals.add(t + v)
-        totals = new_totals
-      return totals
+    def __eq__(self, other): return self._cmp(other, lambda a, b: a == b)
+    def __gt__(self, other): return self._cmp(other, lambda a, b: a >  b)
+    def __ge__(self, other): return self._cmp(other, lambda a, b: a >= b)
+    def __lt__(self, other): return self._cmp(other, lambda a, b: a <  b)
+    def __le__(self, other): return self._cmp(other, lambda a, b: a <= b)
+  
+    def reveal_all(self): [card.reveal() for card in self._cards if not card.faceup]
+    def hide_all(self): [card.hide() for card in self._cards if card.faceup]
+  
+    def add(self, card:PlayingCard, faceup = True): self._cards.append(card.reveal()) if faceup else self._cards.append(card.hide()) 
+  
     
+    def view(self):
+        def helper_html(fig):
+            buf = io.BytesIO()
+            fig.savefig(buf, format='png', bbox_inches='tight')
+            buf.seek(0)
+            img_bytes = buf.read()
+            base64_str = base64.b64encode(img_bytes).decode('utf-8')
+            plt.close(fig)
+            return base64_str
   
-
-  def copy(self):
-    return Hand([card.copy() for card in self._cards])
+        fig, axes = plt.subplots(1, len(self._cards), figsize=(len(self._cards)*1.125, 1.5))
     
-  def true_score(self):
-      totals = scoring_algorithm(ignore_hidden = False)
-      legal = [t for t in totals if t <= 21]
-      return max(legal) if legal else min(totals)
+        axes = axes.flat if isinstance(axes, np.ndarray) else [axes]
+        for ax, card in zip(axes, self._cards):
+            ax.imshow(plt.imread(card.get_img()))
+            ax.axis('off')
     
-  @property
-  def score(self):
-        legal = scoring_algorithm()
+        return f'<img src="data:image/png;base64,{helper_html(fig)}" width="{len(self._cards)*60}px">'
+  
+    def scoring_algorithm(self, ignore_hidden = True):
+        totals = {0}
+        new_totals = set()
+        for card in self._cards:
+            if ignore_hidden and not card.faceup:
+                continue
+            for t in totals:
+                for v in card.values:
+                    new_totals.add(t + v)
+            totals = new_totals
+        return totals
+  
+    def copy(self): return Hand([card.copy() for card in self._cards])
+    def clear(self): self._cards = []
+      
+    def true_score(self):
+        totals = scoring_algorithm(ignore_hidden = False)
         legal = [t for t in totals if t <= 21]
         return max(legal) if legal else min(totals)
-
-  @property
-  def cards(self):
-      return self.view()
-  @property
-  def hand(self):
-      return self._cards
-
-  def clear(self):
-    self._cards = []
-
-  def _create_deck(self): pass
-  def _append(self): pass
-  def _extend(self): pass
-  def _merge(self): pass
-  def draw(self): pass
+      
+    @property
+    def score(self):
+          legal = scoring_algorithm()
+          legal = [t for t in totals if t <= 21]
+          return max(legal) if legal else min(totals)
+  
+    @property
+    def cards(self): return self.view()
+    @property
+    def hand(self): return self._cards
+  
+  
+    def _create_deck(self): pass
+    def _append(self): pass
+    def _extend(self): pass
+    def _merge(self): pass
+    def draw(self): pass
 
 
 
@@ -110,37 +104,39 @@ class Deck(Hand):
   You can draw cards one at a time.
   """
   def __init__(self, build:bool = True, comparer = DefaultCardComparer):
-    self._comparer = comparer
-    self._info = CardInfo.get_info()
-    self._cards = self._create_deck() if build is True else []
+      self._comparer = comparer
+      self._info = CardInfo.get_info()
+      self._cards = self._create_deck() if build is True else []
 
   def deck(self):
-    return self._cards
+      return self._cards
 
   def _create_deck(self):
-    deck = []
-    comparer = self._comparer
-    for card_code, rank_name, suit_name, symbol_code in self._info:
-      deck.append(PlayingCard(card_code, rank_name, suit_name, symbol_code, comparer = comparer))
+      deck = []
+      comparer = self._comparer
+      for card_code, rank_name, suit_name, symbol_code in self._info:
+          deck.append(PlayingCard(card_code, rank_name, suit_name, symbol_code, comparer = comparer))
 
-    random.shuffle(deck)
-    return deck
+      random.shuffle(deck)
+      return deck
 
   def _extend(self, cards:List[PlayingCard]):
-    self._cards += cards
+      self._cards += cards
 
   def _merge(self, deck):
-    self._cards += deck._cards
-    random.shuffle(self._cards)
+      self._cards += deck._cards
+      random.shuffle(self._cards)
 
   def _append(self, num_decks = 1):
-    self._cards += self._create_deck()
-    random.shuffle(self._cards)
+      self._cards += self._create_deck()
+      random.shuffle(self._cards)
 
   def draw(self):
-    if len(self._cards) == 0:
-      self.reset()
-    return self._cards.pop()
+      if len(self._cards) == 0:
+          self.reset()
+      return self._cards.pop()
+
+def reset(self): self._cards = []
 
 
 class Shoe(Deck):
@@ -151,21 +147,19 @@ class Shoe(Deck):
       
   
     def reset(self):
-        self._cards = []
+        super().reset()
         self._append(self._num_decks)
-        self.stats = Stats(self._cards)
+        self._stats = Stats(self._cards)
 
     @property
-    def stats(self):
-        return self.stats
+    def stats(self): return self._stats
       
 
 
 class Stats:
-    def __init__(self, all_cards, info):
+    def __init__(self, all_cards):
         self._all_cards = all_cards 
         self.display_handle = display(DisplayHandle(), display_id=True) # display_id=True automatically generates a unique id
-        self._card_info = info
       
     def outcome_odds(self, hand: Hand):
         """Return bust/safe/blackjack odds if the player hits."""
@@ -193,26 +187,25 @@ class Stats:
         }
     
     def try_value(self, score_candidates, value):
-      new_totals = set()
-      for t in score_candidates:
-          for v in value:
-             new_totals.add(t + v)
-          score_candidates = new_totals
-      legal = [t for t in score_candidates if t <= 21]
-      return max(legal) if legal else min(score_candidates)
+        new_totals = set()
+        for t in score_candidates:
+            for v in value:
+               new_totals.add(t + v)
+            score_candidates = new_totals
+        legal = [t for t in score_candidates if t <= 21]
+        return max(legal) if legal else min(score_candidates)
 
     def counter_df(self, mode = ""):
-      rank_counts = self.counter(mode)
-      return pd.Series(rank_counts, dtype=int).reindex(ALL_RANKS, fill_value=0).to_frame().T
+        rank_counts = self.counter(mode)
+        return pd.Series(rank_counts, dtype=int).reindex(ALL_RANKS, fill_value=0).to_frame().T
       
     def counter(self, mode = ""):
         counts = defaultdict(int)
-        if mode == "faceup":
-            [counts[card] += 1 for card in self._all_cards if card.faceup()]
-        elif mode == "facedown":
-            [counts[card] += 1 for card in self._all_cards if not card.faceup()]
-        elif mode == "values":
-          [counts[card.values] += 1 for card in self._all_cards if not card.faceup()]
-        else:
-            [counts[card] += 1 for card in self._all_cards]
-        return counts
+        for card in self._all_cards:
+            if mode == "faceup" and not card.faceup:
+                continue
+            if mode == "facedown" and card.faceup:
+                continue
+
+            key = card.values if mode == "values" else card
+            counts[key] += 1
