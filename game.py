@@ -19,16 +19,11 @@ class Game(ABC):
     
     self._all_active_players = [dealer] + players
     self._active_players = players
-    self._inactive_players = []
-
-    self._cards_dealt = Hand()
-    
+    self._inactive_players = []    
     self.deck = None
     self._handle = display(DisplayHandle(), display_id=True)
 
-###### Getters #######
-  def get_cards_dealt(self) -> pd.Series: return pd.Series([self._cards_dealt.cards], name = "Cards Dealt")
-    
+###### Getters #######    
   def get_scores(self) -> pd.Series: return pd.Series([player.score for player in self._all_active_players], name = "Scores")
 
   def get_chips(self) -> pd.Series: return pd.Series([player.chips for player in self._all_active_players], name = "Chips")
@@ -51,8 +46,8 @@ class Game(ABC):
       return False
     return True
   
-###### Output ########
-  def display_cards(self): self._handle.update(HTML(self.get_cards_dealt().to_html(escape=False)))
+
+  
 ######## Game Functions ###########
 
   def _prompt_bet(self, player):
@@ -132,14 +127,11 @@ class Game(ABC):
 class Blackjack(Game):
   def __init__(self, players:List[BlackjackPlayer]):
     self.dealer = Dealer()
-    self.strategy
     super().__init__(players, self.dealer, BlackjackCardComparer)
 
   def deal(self, player, verbose = True):
     card = self.deck.draw()
-    player.hit(card)
-    self._cards_dealt.add(card)
-    
+    player.hit(card)    
     if verbose:
       print(f"{player.name} drew {str(card)}")
 
@@ -149,40 +141,6 @@ class Blackjack(Game):
     if verbose:
       print(f"{player.name} [Score: {player.score}] has decided to stand, skipping...")
     player.stand()
-
-
-  def compare(self, player_hand):
-    if player_hand > self.dealer.hand:
-      return "win"
-    elif player_hand < self.dealer.hand:
-      return "lose"
-    else:
-      return "push"
-
-  def _payout(self, player, outcome):
-    bet = player.current_bet
-
-    if outcome == "blackjack":
-      winnings = bet*3
-      out_message = f"{player.name}:\nOutcome: {outcome.capitalize()}! \nWon:{winnings - bet}"
-
-    elif outcome == "win":
-      winnings = bet*2
-      out_message = f"{player.name}:\nOutcome: Winner\nWon:{winnings - bet}"
-
-    elif outcome == "push":
-      out_message = f"{player.name}:\nOutcome: Tied\nBroke Even"
-      winnings = bet
-
-    else:
-      out_message = f"{player.name}:\nOutcome: Loser\nLost:{bet}"
-      winnings = 0
-      pass
-
-    player.settle(winnings)
-    self.pool -= winnings
-    print(out_message)
-    return winnings
 
   def before_round(self):
     if not self.deck:
@@ -197,7 +155,7 @@ class Blackjack(Game):
     for _ in range(2):
       self.round += 1
       for p in self._all_active_players:
-          self._hit(p)
+          self.deal(p)
 
     print("-----------------\n")
     peek = None
@@ -226,8 +184,8 @@ class Blackjack(Game):
     print("------------------")
     self.dealer.reveal()
 
-    while self.dealer.score < self._dealer_stand :
-      self._hit(self.dealer)
+    while self.dealer.is_playing():
+      self.next(self.dealer)
     print("-----------------\n")
 
   def _play_round(self, active_players:List[BlackjackPlayer]):
@@ -262,8 +220,40 @@ class Blackjack(Game):
 
     self.dealer.chips += self.pool
     print("Game Over")
+  
+  def compare(self, player_hand):
+    if player_hand > self.dealer.hand:
+      return "win"
+    elif player_hand < self.dealer.hand:
+      return "lose"
+    else:
+      return "push"
 
+  def _payout(self, player, outcome):
+    bet = player.current_bet
+
+    if outcome == "blackjack":
+      winnings = bet*3
+      out_message = f"{player.name}:\nOutcome: {outcome.capitalize()}! \nWon:{winnings - bet}"
+
+    elif outcome == "win":
+      winnings = bet*2
+      out_message = f"{player.name}:\nOutcome: Winner\nWon:{winnings - bet}"
+
+    elif outcome == "push":
+      out_message = f"{player.name}:\nOutcome: Tied\nBroke Even"
+      winnings = bet
+
+    else:
+      out_message = f"{player.name}:\nOutcome: Loser\nLost:{bet}"
+      winnings = 0
+      pass
+
+    player.settle(winnings)
+    self.pool -= winnings
+    print(out_message)
+    return winnings
+    
   def after_round(self):
-      self.display()
       for p in self._all_active_players:
         p.reset()
