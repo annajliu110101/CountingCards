@@ -94,10 +94,8 @@ class BlackjackPlayer(Participant):
     self._lost = False
 
   def has_strategy(self) -> bool: return self._strategy is not None
-
   @property
   def strategy(self) -> Strategy: return self._strategy
-
   @strategy.setter
   def set_strategy(self, strategy) -> None: self._strategy = strategy
 
@@ -112,12 +110,10 @@ class BlackjackPlayer(Participant):
     return card
 
   def stand(self) -> None: self._skip_rounds = True
-
   @property
   def _stood(self) -> bool: return self._skip_rounds
-
   def bet(self, bid) -> int: return super()._bet(bid)
-
+    
   def _set_scoreboard(self) -> None :
     super()._set_scoreboard({
             "Names": self.name,
@@ -168,15 +164,12 @@ class BlackjackPlayer(Participant):
   def reveal(self): pass
     
 class Dealer(BlackjackPlayer):
-
-  def __init__(self, stand_on = 17):
-    super().__init__("Dealer", 10000)
+  def __init__(self):
+    super().__init__("Dealer", 10000, DealerStrategy(self))
     self._reveal = False
-
-    self._stand_on = stand_on
 ############### PRIVATE FUNCTIONS ###############
   @property
-  def hand(self) -> Hand: eturn self._hand
+  def hand(self) -> Hand: return self._hand
 
   def hit(self, card:PlayingCard):
     if len(self.hand) == 1 and not self._reveal:
@@ -185,11 +178,6 @@ class Dealer(BlackjackPlayer):
 
   def _get_up_card(self) -> PlayingCard: return self.hand[0]
   def _get_hole_card(self) -> PlayingCard: return self.hand[1]
-
-  def is_done(self):
-    if self.score < self._stand_on:
-      return False
-    super().is_done(verbose = False)
 
   def reset(self):
     super().reset()
