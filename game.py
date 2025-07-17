@@ -127,6 +127,11 @@ class Blackjack(Game):
   def __init__(self, players:List[BlackjackPlayer]):
     self._dealer = Dealer()
     super().__init__(players, self._dealer, BlackjackCardComparer)
+  
+  @property
+  def stats(self):
+    return self._cards.stats
+    
 
   def deal(self, player, verbose = True):
     card = self._deck.draw()
