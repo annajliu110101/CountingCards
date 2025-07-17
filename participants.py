@@ -26,15 +26,9 @@ class Participant:
 
   # current bet is 0 when settled
 
-  def is_waiting(self) -> bool:
-    # not settled == their outcome has not been determined yet, skip_rounds == they're no longer drawing -> either they've won (not blackjack), or have stood
-    return not self._settled and self._skip_rounds
-
-  def is_playing(self) -> bool:
-    return not self._settled and not self._skip_game and not self._skip_round
-
-  def is_watching(self) -> bool:
-    return self._skip_game
+  def is_waiting(self) -> bool: return not self._settled and self._skip_rounds
+  def is_playing(self) -> bool: return not self._settled and not self._skip_game and not self._skip_round
+  def is_watching(self) -> bool: return self._skip_game
 
   def is_eligible(self) -> bool:
     if self.chips > 0:
@@ -42,17 +36,10 @@ class Participant:
     self._skip_game = True
     return False
     
-  def is_settled(self) -> bool:
-    return self._settled
-
-  def _set_scoreboard(self, commands:Dict) -> None:
-    self._scoreboard = pd.DataFrame([commands])
-
-  def _add_scoreboard(self, commands:Dict) -> None:
-    self._scoreboard = pd.concat([self._scoreboard, self._set_scoreboard(commands)])
-
-  def _update_display(self) -> None:
-    self.display_handle.update(HTML(self._scoreboard.to_html(escape=False)))
+  def is_settled(self) -> bool: return self._settled
+  def _set_scoreboard(self, commands:Dict) -> None: self._scoreboard = pd.DataFrame([commands])
+  def _add_scoreboard(self, commands:Dict) -> None: self._scoreboard = pd.concat([self._scoreboard, self._set_scoreboard(commands)])
+  def _update_display(self) -> None: self.display_handle.update(HTML(self._scoreboard.to_html(escape=False)))
 
   def _bet(self, bet:int) -> int:
     self._settled = False
@@ -72,20 +59,11 @@ class Participant:
     self._settled = True
     self._skip_rounds = True
 
-  def add_chips(self, payment:int) -> None:
-    self.chips += payment
-  
-  def show_hand(self) -> str:
-    print(self.hand)
-    
-  def get_hand(self, view:bool = True) -> Union[str, Hand]:
-    if view:
-      return self.hand.cards
-    return self.hand
-  
+  def add_chips(self, payment:int) -> None: self.chips += payment
+  def show_hand(self) -> str: print(self.hand)
+  def get_hand(self, view:bool = True) -> Union[str, Hand]: return self.hand.cards if view else self.hand
   @property
-  def score(self) -> int:
-    return self.hand.score
+  def score(self) -> int: return self.hand.score
     
   @property
   def true_score(self) -> int:
@@ -115,16 +93,13 @@ class BlackjackPlayer(Participant):
     self._strategy = strategy
     self._lost = False
 
-  def has_strategy(self) -> bool:
-    return self._strategy is not None
+  def has_strategy(self) -> bool: return self._strategy is not None
 
   @property
-  def strategy(self) -> Strategy:
-    return self._strategy
+  def strategy(self) -> Strategy: return self._strategy
 
   @strategy.setter
-  def set_strategy(self, strategy) -> None:
-    self._strategy = strategy
+  def set_strategy(self, strategy) -> None: self._strategy = strategy
 
   def hit(self, card:PlayingCard) -> PlayingCard:
     self.hand.add(card)
@@ -136,15 +111,12 @@ class BlackjackPlayer(Participant):
     self.display()
     return card
 
-  def stand(self) -> None:
-    self._skip_rounds = True
+  def stand(self) -> None: self._skip_rounds = True
 
   @property
-  def _stood(self) -> bool:
-    return self._skip_rounds
+  def _stood(self) -> bool: return self._skip_rounds
 
-  def bet(self, bid) -> int:
-    return super()._bet(bid)
+  def bet(self, bid) -> int: return super()._bet(bid)
 
   def _set_scoreboard(self) -> None :
     super()._set_scoreboard({
@@ -156,8 +128,7 @@ class BlackjackPlayer(Participant):
             "Active": not self.is_done()
         })
 
-  def _add_scoreboard(self) -> None:
-    super()._add_scoreboard(self._commands)
+  def _add_scoreboard(self) -> None: super()._add_scoreboard(self._commands)
 
   def display(self) -> None:
     self._set_scoreboard()
@@ -187,16 +158,9 @@ class BlackjackPlayer(Participant):
     super().reset()
     self._lost = False
 
-  def is_blackjack(self) -> bool:
-    return len(self.hand.hand) == 2 and self.true_score == 21
-
-
-############### PRIVATE FUNCTIONS ###############
-  def is_bust(self):
-    return self.hand > 21
-
-  def is_21(self):
-      return self.hand == 21
+  def is_blackjack(self) -> bool: return len(self.hand.hand) == 2 and self.true_score == 21
+  def is_bust(self): return self.hand > 21
+  def is_21(self): return self.hand == 21
 
   def _get_up_card(self): pass
   def _get_hole_card(self): pass
@@ -212,19 +176,15 @@ class Dealer(BlackjackPlayer):
     self._stand_on = stand_on
 ############### PRIVATE FUNCTIONS ###############
   @property
-  def hand(self) -> Hand:
-    return self._hand
+  def hand(self) -> Hand: eturn self._hand
 
   def hit(self, card:PlayingCard):
     if len(self.hand) == 1 and not self._reveal:
        card.hide()
     super().hit(card)
 
-  def _get_up_card(self) -> PlayingCard:
-    return self.hand[0]
-
-  def _get_hole_card(self) -> PlayingCard:
-    return self.hand[1]
+  def _get_up_card(self) -> PlayingCard: return self.hand[0]
+  def _get_hole_card(self) -> PlayingCard: return self.hand[1]
 
   def is_done(self):
     if self.score < self._stand_on:
