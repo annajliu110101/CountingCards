@@ -17,11 +17,8 @@ class Hand():
     self._cards = cards if cards else []
 
   def __len__(self): return len(self._cards)
-
   def __getitem__(self, position): return self._cards[position]
-
   def __iter__(self): return iter(self._cards)
-
   def __str__(self): return ", ".join([str(card) for card in self._cards])
 
   def _cmp(self, other, op):
@@ -36,9 +33,11 @@ class Hand():
   def __le__(self, other): return self._cmp(other, lambda a, b: a <= b)
 
   def reveal_all(self): [card.reveal() for card in self._cards if not card.faceup]
-
   def hide_all(self): [card.hide() for card in self._cards if card.faceup]
-    
+
+  def add(self, card:PlayingCard, faceup = True): self._cards.append(card.reveal()) if faceup else self._cards.append(card.hide()) 
+
+  
   def view(self):
       def helper_html(fig):
           buf = io.BytesIO()
@@ -57,18 +56,6 @@ class Hand():
           ax.axis('off')
   
       return f'<img src="data:image/png;base64,{helper_html(fig)}" width="{len(self._cards)*60}px">'
-
-  def add(self, card:PlayingCard, faceup = True):
-      self._cards.append(card.reveal()) if faceup else self._cards.append(card.hide())      
-
-  def score_card(self, score_candidates, card):
-      new_totals = set()
-      for t in score_candidates:
-          for v in card.values:
-             new_totals.add(t + v)
-          score_candidates = new_totals
-      legal = [t for t in score_candidates if t <= 21]
-      return max(legal) if legal else min(score_candidates)
 
   def scoring_algorithm(self, ignore_hidden = True):
       totals = {0}
@@ -175,30 +162,44 @@ class Shoe(Deck):
 
 
 class Stats:
-    def __init__(self, all_cards):
-        self._all_cards = all_cards        
+    def __init__(self, all_cards, info):
+        self._all_cards = all_cards 
+        self.display_handle = display(DisplayHandle(), display_id=True) # display_id=True automatically generates a unique id
+        self._card_info = info
       
     def outcome_odds(self, hand: Hand):
         """Return bust/safe/blackjack odds if the player hits."""
         bust = blackjack = safe = 0
-        curr_scores = set(hand.scoring_algorithm(ignore_hidden = False))
-      
-        for card, count in self.counter(mode="facedown").items():
+        curr_scores = set(hand.scoring_algorithm())
+        values_left = self.counter(mode="values")
+        total = 0
+        
+        for value, count in values_left.items():
             if count <= 0:
                 continue
-            score = hand.score_card(curr_scores, card)
+            score = self.try_value(curr_scores, value)
             if score > 21:
                 bust += count
             elif score == 21:
                 blackjack += count
             else:
                 safe += count
+            total += count
 
         return {
             "bust": bust / total,
             "safe": safe / total,
             "blackjack": blackjack / total,
         }
+    
+    def try_value(self, score_candidates, value):
+      new_totals = set()
+      for t in score_candidates:
+          for v in value:
+             new_totals.add(t + v)
+          score_candidates = new_totals
+      legal = [t for t in score_candidates if t <= 21]
+      return max(legal) if legal else min(score_candidates)
 
     def counter_df(self, mode = ""):
       rank_counts = self.counter(mode)
@@ -210,6 +211,8 @@ class Stats:
             [counts[card] += 1 for card in self._all_cards if card.faceup()]
         elif mode == "facedown":
             [counts[card] += 1 for card in self._all_cards if not card.faceup()]
+        elif mode == "values":
+          [counts[card.values] += 1 for card in self._all_cards if not card.faceup()]
         else:
             [counts[card] += 1 for card in self._all_cards]
         return counts
