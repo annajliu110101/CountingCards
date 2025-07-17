@@ -29,6 +29,7 @@ class Game(ABC):
 ###### Getters #######
   def get_cards_dealt(self) -> pd.Series:
     return pd.Series([self._cards_dealt.cards], name = "Cards Dealt")
+    
   def get_scores(self) -> pd.Series:
     return pd.Series([player.score for player in self._all_active_players], name = "Scores")
 
@@ -59,11 +60,8 @@ class Game(ABC):
     return True
   
 ###### Output ########
-  def display(self, player = None):
-    if not player:
+  def display_cards(self):
       self._handle.update(HTML(self.get_cards_dealt().to_html(escape=False)))
-    else:
-        player.display()
 ######## Game Functions ###########
 
   def _prompt_bet(self, player):
