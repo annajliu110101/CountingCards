@@ -27,29 +27,21 @@ class Game(ABC):
     self._handle = display(DisplayHandle(), display_id=True)
 
 ###### Getters #######
-  def get_cards_dealt(self) -> pd.Series:
-    return pd.Series([self._cards_dealt.cards], name = "Cards Dealt")
+  def get_cards_dealt(self) -> pd.Series: return pd.Series([self._cards_dealt.cards], name = "Cards Dealt")
     
-  def get_scores(self) -> pd.Series:
-    return pd.Series([player.score for player in self._all_active_players], name = "Scores")
+  def get_scores(self) -> pd.Series: return pd.Series([player.score for player in self._all_active_players], name = "Scores")
 
-  def get_chips(self) -> pd.Series:
-    return pd.Series([player.chips for player in self._all_active_players], name = "Chips")
+  def get_chips(self) -> pd.Series: return pd.Series([player.chips for player in self._all_active_players], name = "Chips")
 
-  def get_names(self) -> pd.Series:
-    return pd.Series([player.name for player in self._all_active_players], name = "Names")
+  def get_names(self) -> pd.Series: return pd.Series([player.name for player in self._all_active_players], name = "Names")
 
-  def get_hands(self) -> pd.Series:
-    return pd.Series([p.get_hand() for p in self._all_active_players], name = "Hands")
+  def get_hands(self) -> pd.Series: return pd.Series([p.get_hand() for p in self._all_active_players], name = "Hands")
 
-  def get_status(self) -> pd.Series:
-    return pd.Series([not p.is_done() for p in self._all_active_players], name = "Status")
+  def get_status(self) -> pd.Series: return pd.Series([not p.is_done() for p in self._all_active_players], name = "Status")
 
-  def get_active_players(self, verbose = False) -> List[BlackjackPlayer]:
-    return [p for p in self._active_players if not p.is_done(verbose = verbose)]
+  def get_active_players(self, verbose = False) -> List[BlackjackPlayer]: return [p for p in self._active_players if not p.is_done(verbose = verbose)]
     
-  def get_pending(self):
-    return [p for p in self._active_players if p.is_waiting()]
+  def get_pending(self): return [p for p in self._active_players if p.is_waiting()]
 
   def check_eligible_players(self, player):
     if not player.is_eligible():
@@ -60,14 +52,15 @@ class Game(ABC):
     return True
   
 ###### Output ########
-  def display_cards(self):
-      self._handle.update(HTML(self.get_cards_dealt().to_html(escape=False)))
+  def display_cards(self): self._handle.update(HTML(self.get_cards_dealt().to_html(escape=False)))
 ######## Game Functions ###########
 
   def _prompt_bet(self, player):
       """
       Loop until we get a valid integer within the player’s stack.
       """
+      if player.has_strategy():
+         return player.strategy.autobet()
       while True:
           raw = input(f"{player.name}: (chips: {player.chips}), enter bet ≥ 1:\n")
           try:
@@ -107,6 +100,20 @@ class Game(ABC):
 
     self.after_round()
     print("-----------------\n")
+    
+  def next(self, player, verbose = False):
+    if player.has_strategy():
+      if verbose:
+        print(f"{player.name}, Your Current Score is {player.score}.")
+      player.strategy.decide(self, verbose = True)
+    else:
+      action = input(f"{player.name}, Your Current Score is {player.score}.\nPress 'y' to 'hit', or press any other key to 'stand': \n")
+      if action.lower() == 'y':
+        card = self.deal(player)
+        print(f"{player.name}: Current Score = {player.score}")
+      else:
+        self.skip(player)
+
   @abstractmethod
   def _hit(self, player): ...
   @abstractmethod
@@ -121,30 +128,11 @@ class Game(ABC):
   def settle(self): ...
   @abstractmethod
   def after_round(self): ...
-########## Player Functions ############
-
-
-
-  def next(self, player):
-    if player.has_strategy():
-      print(f"{player.name}, Your Current Score is {player.score}.")
-      player.strategy.decide(player, self)
-    else:
-      action = input(f"{player.name}, Your Current Score is {player.score}.\nPress 'y' to 'hit', or press any other key to 'stand': \n")
-      if action.lower() == 'y':
-        card = self.deal(player)
-
-        print(f"{player.name}: Current Score = {player.score}")
-
-      else:
-        self.skip(player)
 
 class Blackjack(Game):
   def __init__(self, players:List[BlackjackPlayer]):
     self.dealer = Dealer()
-    self._dealer_stand = 17
-
-
+    self.strategy
     super().__init__(players, self.dealer, BlackjackCardComparer)
 
   def deal(self, player, verbose = True):
