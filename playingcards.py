@@ -1,3 +1,4 @@
+from typing import Optional
 class DefaultCardComparer:
   @staticmethod
   def equals(card1, card2):
@@ -35,7 +36,7 @@ class BlackjackCardComparer:
       return 10
 
 class PlayingCard():
-  def __init__(self, code:str, name:str, suit_name:str, symbol_code:Optional[str] = None, faceup:bool = True, comparer = DefaultCardComparer): # eg. PlayingCard('10H', '10', 'hearts', '♥')
+  def __init__(self, code:str, name:str, suit_name:str, symbol_code:Optional[str] = None, faceup:bool = False, comparer = DefaultCardComparer): # eg. PlayingCard('10H', '10', 'hearts', '♥')
   # Save the basic info
     self._code   = code     # e.g. '10H'
     self._name   = name     # e.g. '10'
@@ -43,7 +44,7 @@ class PlayingCard():
     self._comparer = comparer
 
     self._symbol = symbol_code   # e.g. '♥'
-    self._faceup = True
+    self._faceup = faceup
 
     self._rank = code[:-1]
     self._img = f"/content/{self.name}_of_{self.suit}.png"
@@ -88,6 +89,10 @@ class PlayingCard():
   def get_score(self) -> int:
       self._comparer.get_score(self)
 
+  def flip(self):
+    self._faceup = not self._faceup
+    return self
+    
   def reveal(self):
     self._faceup = True
     return self
@@ -110,10 +115,9 @@ class PlayingCard():
     """
     Returns the raw image array you can show with matplotlib.
     """
-    if not self._faceup:
-      return self._back
-
-    return self._img
+    if self._faceup:
+      return self._img
+    return self._back
 
   def is_facecard(self):
     return self._name in ['jack', 'queen', 'king', 'ace']
