@@ -1,8 +1,6 @@
-from collections import Counter
 import base64
 import io
 import random
-from collections import Counter
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -37,6 +35,7 @@ class Hand():
     def add(self, card:PlayingCard): self._cards.append(card)
     def copy(self): return Hand([card.copy() for card in self._cards])
     def reset(self): self._cards = []
+    def clear(self): self._cards = []
 
     def view(self):
         def helper_html(fig):
@@ -62,7 +61,7 @@ class Hand():
         for card in self._cards:
             if ignore_hidden and not card.faceup:
                 continue
-            totals = {t + v for t in totals for v in c.values}
+            totals = {t + v for t in totals for v in card.values}
         return totals
 
     def true_score(self):
@@ -122,22 +121,22 @@ class Deck(Hand):
       random.shuffle(self._cards)
 
   def draw(self):
-      if len(self._cards) == 0:
-          self.reset()
+      if len(self._cards) == 0: self.reset()
       return self._cards.pop()
-
-  def reset(self): self._cards = []
+      
+  def reset(self): self._cards = self._create_deck()
+      
 
 class Shoe(Deck):
     def __init__(self, num_decks = 4):
         super().__init__(build=False, comparer=BlackjackCardComparer)
         self._num_decks = num_decks
+        self._stats = None
         self.reset()
 
     def draw(self, flip = True):
       card = super().draw()
-      if flip:
-        card.reveal()
+      if flip: return card.reveal()
       return card
 
     def reset(self):
