@@ -2,8 +2,11 @@ from abc import ABC, abstractmethod
 from participants import BlackjackPlayer, Dealer
 from game import Game
 
+# @title Default title text
+from abc import ABC, abstractmethod
 
-class Strategy(ABC):
+
+class Strategy():
     """
     🎯 This is the base Strategy class — the 'brain blueprint' for Blackjack.
 
@@ -25,12 +28,15 @@ class Strategy(ABC):
     ✅ You ONLY need to define the logic inside YourStrategy.decide().
     """
 
-    def __init__(self, player: BlackjackPlayer): 
+    def __init__(self, player):
         self._player = player
         self._autobet = 100
 
-    def autobet(self):
+    def autobet(self, game):
         return self._player.bet(self._autobet)
+
+    def add_player(self, player):
+        self._player = player
 
     @abstractmethod
     def decide(self, game: Game):
@@ -59,10 +65,10 @@ class DealerStrategy(Strategy):
     You can use this as an example!
     """
 
-    def __init__(player: Dealer):
+    def __init__(self, player):
         super().__init__(player)
 
-    def autobet(self):
+    def autobet(self, game):
         pass  # dealer doesn't bet
 
     def decide(self, game: Game, verbose: bool = False) -> None:
@@ -96,7 +102,10 @@ class HiLoStrategy(Strategy):
     hilo_brain.decide(game)
     -------------------
     """
-    def autobet(self):
+    def __init__(self, player):
+        super().__init__(player)
+
+    def autobet(self, game:Game):
         """
         💰 Smarter betting using card counts.
 
@@ -108,8 +117,9 @@ class HiLoStrategy(Strategy):
         This works *exactly* like our Hi-Lo count from the decide() method.
         """
 
-        card_counts = self._player._game._cards.stats.count_remaining_cards()
-
+        card_counts = game.stats.count_remaining_cards()
+        if game._round == 0:
+          return self._player.bet(self._autobet)
         count = 0
         for card, qty in card_counts.items():
             rank = str(card.rank)
@@ -130,14 +140,14 @@ class HiLoStrategy(Strategy):
             return self._player.bet(100)
         else:
             return self._player.bet(25)   # ❄️ not favorable — play cautious
-            
-    
-    def decide(self, game: Game) -> None:
+
+
+    def decide(self, game: Game, verbose = False) -> None:
         """
         Called automatically during the game when it’s this player’s turn.
         """
         score = self._player.score
-        
+
         card_counts = game.stats.count_all_cards_dealt()
         count = 0
 
@@ -159,68 +169,18 @@ class HiLoStrategy(Strategy):
         if count > 5:
             # Be aggressive
             if score < 18:
-                game.deal(self._player)
+                game.deal(self._player, verbose = verbose)
             else:
-                game.skip(self._player)
+                game.skip(self._player, verbose = verbose)
         elif count < -5:
             # Be cautious
             if score < 12:
-                game.deal(self._player)
+                game.deal(self._player, verbose = verbose)
             else:
-                game.skip(self._player)
+                game.skip(self._player, verbose)
         else:
             # Neutral
             if score < 16:
-                game.deal(self._player)
+                game.deal(self._player, verbose)
             else:
-                game.skip(self._player)
-
-class YourStrategy(Strategy):
-    """
-    🧠 This is YOUR strategy! You get to program the brain of your Blackjack player.
-
-    🔧 Everything is already set up. You don’t have to change anything outside this file.
-    Just fill in the 'decide' method below to control how your player acts during the game.
-
-    🎲 Here’s what you can use in your logic:
-
-    self._player.score
-        → Your current score (e.g. 13, 17, etc.)
-
-    game.get_dealer_card()
-        → The dealer’s *face-up* card (you can peek at it!)
-
-    game.stats.win_rate(self._player)
-        → Your overall win rate in the game so far
-
-    game.stats.average_score(self._player)
-        → Your average score over previous rounds
-
-    game.stats.card_counter()
-        → Gives you a simplified count of remaining high/low cards in the shoe
-
-    game.round_num
-        → Which round you're in (0 = first round, 1 = second round, ...)
-
-    ✏️ Example logic:
-        if self._player.score < 15:
-            game.deal(self._player)
-        else:
-            game.skip(self._player)
-
-    🚀 Once you write your logic, run the simulation and watch how it plays out!
-    """
-
-    def decide(self, game: Game) -> None:
-        """
-        Write your Blackjack strategy here!
-
-        Use info from the game or stats to decide:
-        - Should you hit (take another card)?
-        - Or stand (keep your current score)?
-
-        Remember:
-        - game.deal(self._player)  → to hit
-        - game.skip(self._player)  → to stand
-        """
-        pass
+                game.skip(self._player, verbose)
