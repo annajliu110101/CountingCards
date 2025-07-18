@@ -58,11 +58,7 @@ class Hand():
 
     def scoring_algorithm(self, ignore_hidden = True):
         totals = {0}
-        for card in self._cards:
-            if ignore_hidden and not card.faceup:
-                continue
-            totals = {t + v for t in totals for v in card.values}
-        return totals
+        return {t + v for t in totals for card in self._cards if not ignore_hidden or card.faceup for v in card.values}
 
     def true_score(self):
         totals = self.scoring_algorithm(ignore_hidden = False)
