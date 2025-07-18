@@ -15,9 +15,11 @@ class Hand():
         self._cards = cards or []
 
     def _cmp(self, other, op):
-          s = self.score
-          o = other.score if isinstance(other, Hand) else int(other)
-          return op(s, o)
+        try:
+            o = other.score if isinstance(other, Hand) else int(other)
+        except (TypeError, ValueError):
+            raise TypeError("Objects are not comparable")
+        return op(self.score, o)
 
     def __len__(self): return len(self._cards)
     def __getitem__(self, position): return self._cards[position]
@@ -47,29 +49,32 @@ class Hand():
             plt.close(fig)
             return base64_str
 
-        fig, axes = plt.subplots(1, len(self._cards), figsize=(len(self._cards)*1.125, 1.5))
+        length = len(self._cards)
+        fig, axes = plt.subplots(1, length, figsize=(length*1.125, 1.5))
 
         axes = axes.flat if isinstance(axes, np.ndarray) else [axes]
         for ax, card in zip(axes, self._cards):
             ax.imshow(plt.imread(card.get_img()))
             ax.axis('off')
 
-        return f'<img src="data:image/png;base64,{helper_html(fig)}" width="{len(self._cards)*60}px">'
+        return f'<img src="data:image/png;base64,{helper_html(fig)}" width="{length*60}px">'
 
     def scoring_algorithm(self, ignore_hidden = True):
         totals = {0}
-        return {t + v for t in totals for card in self._cards if not ignore_hidden or card.faceup for v in card.values}
+        for card in self._cards:
+            if ignore_hidden and not card.faceup:
+                continue
+            totals = {t + v for t in totals for v in card.values}
+        return totals
 
     def true_score(self):
-        totals = self.scoring_algorithm(ignore_hidden = False)
-        legal = [t for t in totals if t <= 21]
-        return max(legal) if legal else min(totals)
+        totals = self.scoring_algorithm(False)
+        return max([t for t in totals if t <= 21]) or min(totals)
 
     @property
     def score(self):
-          totals = self.scoring_algorithm()
-          legal = [t for t in totals if t <= 21]
-          return max(legal) if legal else min(totals)
+        totals = self.scoring_algorithm()
+        return max([t for t in totals if t <= 21]) or min(totals)
 
     @property
     def cards(self): return self.view()
@@ -160,7 +165,7 @@ class Stats:
         for value, count in values_left.items():
             if count <= 0:
                 continue
-            score = self.try_value(curr_scores, value)
+            score = self.project_score(curr_scores, value)
             if score > 21:
                 bust += count
             elif score == 21:
@@ -175,16 +180,14 @@ class Stats:
             "blackjack": blackjack / total,
         }
 
-    def try_value(self, score_candidates, value):
+    def project_score(self, score_candidates, value):
         totals = {0}
         new_totals = set()
         for t in score_candidates:
             for v in value:
                new_totals.add(t + v)
             totals = new_totals
-        score_candidates = totals
-        legal = [t for t in score_candidates if t <= 21]
-        return max(legal) if legal else min(score_candidates)
+        return max([t for t in totals if t <= 21]) or min(totals)
 
     def counter_df(self, mode = ""):
         rank_counts = self.counter(mode)
