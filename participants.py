@@ -82,7 +82,8 @@ class Participant:
 class BlackjackPlayer(Participant):
   def __init__(self, name, chips = 10000, strategy = None):
         try:
-            super().__init__(name, chips, strategy(self))
+            strategy = strategy(self)
+            super().__init__(name, chips, strategy)
         except TypeError:
             super().__init__(name, chips, None)
         self._lost = False
