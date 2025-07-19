@@ -86,7 +86,7 @@ class Participant:
 class BlackjackPlayer(Participant):
   def __init__(self, name, chips = 10000, strategy: Optional[Strategy] = None):
         if strategy is None:
-            super().__init__(name, chips)
+            super().__init__(name, chips, None)
         else:
             super().__init__(name, chips, strategy(self))
         self._lost = False
