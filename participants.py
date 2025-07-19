@@ -4,7 +4,7 @@ from IPython.display import HTML, DisplayHandle, display
 
 from .cards import Hand
 from .playingcards import PlayingCard
-from .strategy import Strategy
+from .strategy import Strategy, DealerStrategy
 from ._utils import flash_line
 
 class Participant:
