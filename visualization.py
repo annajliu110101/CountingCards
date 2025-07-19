@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 from typing import List, Dict
 
-from game import Blackjack
-from participants import BlackjackPlayer
+from .game import Blackjack
+from .participants import BlackjackPlayer
 
 class WinRateVisualizer:
     """Utility class to plot win rates versus the dealer."""
