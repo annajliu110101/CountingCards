@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from .participants import BlackjackPlayer, Dealer
 from .game import Game
 
 class Strategy():
