@@ -8,6 +8,7 @@ import numpy as np
 from IPython.display import DisplayHandle, display
 
 from ._utils import CardInfo
+ALL_RANKS = list(CardInfo.NAMES.keys())
 from .playingcards import PlayingCard, DefaultCardComparer, BlackjackCardComparer
 
 class Hand():
@@ -191,7 +192,7 @@ class Stats:
 
     def counter_df(self, mode = ""):
         rank_counts = self.counter(mode)
-        return pd.Series(rank_counts, dtype=int).reindex(CardInfo.NAMES.keys(), fill_value=0).to_frame().T
+        return pd.Series(rank_counts, dtype=int).reindex(ALL_RANKS, fill_value=0).to_frame().T
 
     def count_all_cards_dealt(self, nice_print_format = False):
         if nice_print_format:
