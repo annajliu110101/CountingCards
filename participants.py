@@ -21,9 +21,9 @@ class Participant:
     self._skip_rounds = False
     self._skip_game = False
     
-  def has_strategy(self) -> bool: return self._strategy is not None
+  def has_strategy(self) -> bool: return bool(self._strategy)
   @property
-  def strategy(self) -> "Strategy": return self._strategy
+  def strategy(self): return self._strategy
   @strategy.setter
   def set_strategy(self, strategy) -> None: self._strategy = strategy(self)
     
@@ -80,15 +80,14 @@ class Participant:
   def display(self): pass
 
 class BlackjackPlayer(Participant):
-  def __init__(self, name, chips = 10000, strategy = None):
+  def __init__(self, name, chips = 10000, strategy = Strategy):
         if strategy is not None:
           try:
-            strategy = strategy(self)
-            super().__init__(name, chips, strategy)
+            super().__init__(name, chips, strategy(self))
           except TypeError:
-            super().__init__(name, chips, None)
+            super().__init__(name, chips, Strategy(self))
         else:
-            super().__init__(name, chips, None)
+            super().__init__(name, chips, Strategy(self))
           
         self._lost = False
 
