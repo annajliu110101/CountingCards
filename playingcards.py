@@ -70,22 +70,6 @@ class PlayingCard():
   def values(self): return self._comparer.get_values(self)
   @property
   def faceup(self): return self._faceup
-    
-  def __add__(self, other):
-      from hand import Hand 
-      if isinstance(other, PlayingCard):
-          return Hand([self, other])
-      elif isinstance(other, Hand):
-          return Hand([self] + other._cards)
-      return NotImplemented
-    
-  def __radd__(self, other):
-      from hand import Hand 
-      if other == 0:
-          return self
-      elif isinstance(other, Hand):
-          return Hand([self] + other._cards)
-    return NotImplemented
 
   def __eq__(self, other):return self._comparer.equals(self, other) 
   def __ne__(self, other): return not self.__eq__(other)
