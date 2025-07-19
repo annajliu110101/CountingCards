@@ -30,7 +30,7 @@ class Participant:
   @property
   def strategy(self) -> "Strategy": return self._strategy
   @strategy.setter
-  def set_strategy(self, strategy) -> None: self._strategy = strategy
+  def set_strategy(self, strategy) -> None: self._strategy = strategy(self)
     
   def is_settled(self) -> bool: return self._settled
   def is_waiting(self) -> bool: return not self._settled and self._skip_rounds
