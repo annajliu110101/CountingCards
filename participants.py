@@ -8,14 +8,15 @@ from .strategy import Strategy, DealerStrategy
 from ._utils import flash_line
 
 class Participant:
-  def __init__(self, name:str, chips:int, strategy: Optional[Strategy] = None):
+  def __init__(self, name:str, chips:int, strategy = None):
     self.name, self.chips = name, chips
     self._hand = Hand()
 
-    if isinstance(strategy, Strategy):
-        self._strategy = strategy
-    else:
+    if strategy is None:
         self._strategy = None
+        
+    else:
+        self._strategy = strategy
     
     self.display_handle = display(DisplayHandle(), display_id=True) # display_id=True automatically generates a unique id
     self._scoreboard = None
@@ -84,7 +85,7 @@ class Participant:
   def display(self): pass
 
 class BlackjackPlayer(Participant):
-  def __init__(self, name, chips = 10000, strategy: Optional[Strategy] = None):
+  def __init__(self, name, chips = 10000, strategy = None):
         if strategy is None:
             super().__init__(name, chips, None)
         else:
