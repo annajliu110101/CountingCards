@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict
-
+from __future__ import annotations
+from typing import List, Optional, Dict, TYPE_CHECKING
+if TYPE_CHECKING:
+  from playingcards import DefaultCardComparer, BlackjackCardComparer
 import pandas as pd
 from IPython.display import HTML, DisplayHandle, display
 
@@ -115,10 +117,6 @@ class Blackjack(Game):
   def __init__(self, players:List[BlackjackPlayer]):
     self._dealer = Dealer()
     super().__init__(players, self._dealer, BlackjackCardComparer)
-
-  @property
-  def stats(self):
-    return self._deck.stats
 
   def deal(self, player, verbose = True):
     card = self._deck.draw()
