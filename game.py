@@ -1,8 +1,5 @@
 from abc import ABC, abstractmethod
-from __future__ import annotations
-from typing import List, Optional, Dict, TYPE_CHECKING
-if TYPE_CHECKING:
-  from playingcards import DefaultCardComparer, BlackjackCardComparer
+from typing import List, Optional, Dict
 import pandas as pd
 from IPython.display import HTML, DisplayHandle, display
 
@@ -63,7 +60,7 @@ class Game(ABC):
       Loop until we get a valid integer within the player’s stack.
       """
       if player.has_strategy():
-         return player.strategy.autobet(self)
+         return player.strategy.autobet(self._deck)
       while True:
           raw = input(f"{player.name}: (chips: {player.chips}), enter bet ≥ 1:\n")
           try:
@@ -89,7 +86,10 @@ class Game(ABC):
       if player.has_strategy():
           if verbose:
               print(f"{player.name}, Your Current Score is {player.score}.")
-          player.strategy.decide(self, verbose = True)
+          if player.strategy.decide(self._deck, verbose = True):
+              self.deal(player, verbose = True)
+          else:
+              self.skip(player, verbose = False)
       else:
           action = input(f"{player.name}, Your Current Score is {player.score}.\nPress 'y' to 'hit', or press any other key to 'stand': \n")
           if action.lower() == 'y':
