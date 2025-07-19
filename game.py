@@ -3,6 +3,7 @@ from typing import List, Optional, Dict
 import pandas as pd
 from IPython.display import HTML, DisplayHandle, display
 
+from .strategy import HiLoStrategy
 from .playingcards import DefaultCardComparer, BlackjackCardComparer
 from .participants import BlackjackPlayer, Dealer
 from .cards import Shoe
