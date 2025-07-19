@@ -83,7 +83,7 @@ class BlackjackPlayer(Participant):
   @property
   def strategy(self): return self._strategy
   @strategy.setter
-  def set_strategy(self, strategy) -> None: self._strategy = strategy(self)
+  def set_strategy(self, strategy = Strategy) -> None: self._strategy = strategy(self)
   def stand(self) -> None: self._skip_rounds = True
   def bet(self, bid) -> int: return super()._bet(bid) 
 
