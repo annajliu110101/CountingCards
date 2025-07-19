@@ -2,7 +2,7 @@ import base64
 import io
 import random
 from typing import List
-
+from collections import defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import DisplayHandle, display
