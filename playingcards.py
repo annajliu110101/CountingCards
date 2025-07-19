@@ -1,4 +1,6 @@
-from typing import Optional, TYPE_CHECKING
+from Pathlib import Path
+
+ROOT = Path(__file__).parent.resolve()
 
 
 class DefaultCardComparer:
@@ -52,8 +54,8 @@ class PlayingCard():
     self._faceup = faceup
     self._comparer = comparer
     self._rank = code[:-1]
-    self._img = f"/content/{self.name}_of_{self.suit}.png"
-    self._back = '/content/back.png'
+    self._img = f"{ROOT}/content/{self.name}_of_{self.suit}.png"
+    self._back = f'{ROOT}/content/back.png'
 
 
   @property
