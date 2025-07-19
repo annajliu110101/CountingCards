@@ -8,10 +8,10 @@ from .strategy import Strategy, DealerStrategy
 from ._utils import flash_line
 
 class Participant:
-  def __init__(self, name:str, chips:int, strategy):
+  def __init__(self, name:str, chips:int):
     self.name, self.chips = name, chips
     self._hand = Hand()
-    self._strategy = strategy
+    
     
     self.display_handle = display(DisplayHandle(), display_id=True) # display_id=True automatically generates a unique id
     self._scoreboard = None
@@ -20,12 +20,6 @@ class Participant:
     self._settled = True
     self._skip_rounds = False
     self._skip_game = False
-    
-  def has_strategy(self) -> bool: return bool(self._strategy)
-  @property
-  def strategy(self): return self._strategy
-  @strategy.setter
-  def set_strategy(self, strategy) -> None: self._strategy = strategy(self)
     
   def is_settled(self) -> bool: return self._settled
   def is_waiting(self) -> bool: return not self._settled and self._skip_rounds
@@ -80,17 +74,16 @@ class Participant:
   def display(self): pass
 
 class BlackjackPlayer(Participant):
-  def __init__(self, name, chips = 10000, strategy = None):
-        if strategy is None:
-            super().__init__(name, chips, Strategy(self))
-        else:
-            try:
-                super().__init__(name, chips, strategy(self))
-            except TypeError:
-                super().__init__(name, chips, Strategy(self))
-          
-        self._lost = False
-
+  def __init__(self, name, chips = 10000, strategy = Strategy):
+    super().__init__(name, chips)
+    self._strategy = strategy(self)       
+    self._lost = False
+    
+  def has_strategy(self) -> bool: return bool(self._strategy)
+  @property
+  def strategy(self): return self._strategy
+  @strategy.setter
+  def set_strategy(self, strategy) -> None: self._strategy = strategy(self)
   def stand(self) -> None: self._skip_rounds = True
   def bet(self, bid) -> int: return super()._bet(bid) 
 
