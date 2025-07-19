@@ -1,6 +1,7 @@
-from participants import BlackjackPlayer
-from game import Blackjack
-from visualization import WinRateVisualizer
+from .participants import BlackjackPlayer
+from .game import Blackjack
+from .visualization import WinRateVisualizer
+
 def run():
   players = [BlackjackPlayer("Anna"), BlackjackPlayer("Noe"), BlackjackPlayer("Daniel")]
 
