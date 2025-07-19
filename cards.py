@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import DisplayHandle, display
 
-from _utils import CardInfo
-from playingcards import PlayingCard, DefaultCardComparer, BlackjackCardComparer
+from ._utils import CardInfo
+from .playingcards import PlayingCard, DefaultCardComparer, BlackjackCardComparer
 
 class Hand():
     def __init__(self, cards = None):
