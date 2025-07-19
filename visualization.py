@@ -9,7 +9,7 @@ from .participants import BlackjackPlayer
 class WinRateVisualizer:
     """Utility class to plot win rates versus the dealer."""
 
-    def __init__(self, game: Game):
+    def __init__(self, game: Blackjack):
         self.game = game
 
     def play(self, rounds: int = 1):
