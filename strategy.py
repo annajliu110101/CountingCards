@@ -34,7 +34,7 @@ class Strategy():
         self._player = player
 
     @abstractmethod
-    def decide(self, game: Game):
+    def decide(self, deck:Shoe):
         """
         You must implement this method in your own strategy.
         This is where your Blackjack player decides what to do.
@@ -66,7 +66,7 @@ class DealerStrategy(Strategy):
     def autobet(self, deck):
         pass  # dealer doesn't bet
 
-    def decide(self, game: Game, verbose: bool = False) -> None:
+    def decide(self, deck: Shoe, verbose: bool = False) -> None:
         if self._player.score < 17:
             return True
         else:
