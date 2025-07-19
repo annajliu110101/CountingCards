@@ -1,9 +1,3 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-  from strategy import Strategy, DealerStrategy
-  
 from typing import Dict, Optional, Union
 import pandas as pd
 from IPython.display import HTML, DisplayHandle, display
@@ -14,9 +8,14 @@ from .strategy import Strategy
 from ._utils import flash_line
 
 class Participant:
-  def __init__(self, name:str, chips:int):
+  def __init__(self, name:str, chips:int, strategy: Optional[Strategy] = None):
     self.name, self.chips = name, chips
     self._hand = Hand()
+
+    if isinstance(strategy, Strategy):
+        self._strategy = strategy(self)
+    else:
+        self._strategy = None
     
     self.display_handle = display(DisplayHandle(), display_id=True) # display_id=True automatically generates a unique id
     self._scoreboard = None
@@ -25,7 +24,13 @@ class Participant:
     self._settled = True
     self._skip_rounds = False
     self._skip_game = False
-
+    
+  def has_strategy(self) -> bool: return self._strategy is not None
+  @property
+  def strategy(self) -> "Strategy": return self._strategy
+  @strategy.setter
+  def set_strategy(self, strategy) -> None: self._strategy = strategy
+    
   def is_settled(self) -> bool: return self._settled
   def is_waiting(self) -> bool: return not self._settled and self._skip_rounds
   def is_playing(self) -> bool: return not self._settled and not self._skip_game and not self._skip_rounds
@@ -36,8 +41,7 @@ class Participant:
           return True
       self._skip_game = True
       return False
-
-
+    
   def _set_scoreboard(self, commands:Dict) -> None: self._scoreboard = pd.DataFrame([commands])
   def _add_scoreboard(self, commands:Dict) -> None: self._scoreboard = pd.concat([self._scoreboard, self._set_scoreboard(commands)])
   def _update_display(self) -> None: self.display_handle.update(HTML(self._scoreboard.to_html(escape=False)))
@@ -81,23 +85,18 @@ class Participant:
 
 class BlackjackPlayer(Participant):
   def __init__(self, name, chips = 10000, strategy: Optional[Strategy] = None):
-        super().__init__(name, chips)
-        self._strategy = strategy(self) if strategy else None
+        super().__init__(name, chips, strategy)
         self._lost = False
 
   def stand(self) -> None: self._skip_rounds = True
   def bet(self, bid) -> int: return super()._bet(bid) 
-  def has_strategy(self) -> bool: return self._strategy is not None
+
   def _add_scoreboard(self) -> None: super()._add_scoreboard(self._commands)
   
   def is_blackjack(self) -> bool: return len(self._hand) == 2 and self.true_score == 21
   def is_bust(self): return self._hand > 21
   def is_21(self): return self._hand == 21
 
-  @property
-  def strategy(self) -> "Strategy": return self._strategy
-  @strategy.setter
-  def set_strategy(self, strategy) -> None: self._strategy = strategy
   @property
   def _stood(self) -> bool: return self._skip_rounds
 
