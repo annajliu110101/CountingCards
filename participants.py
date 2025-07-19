@@ -82,7 +82,13 @@ class BlackjackPlayer(Participant):
   def stand(self) -> None: self._skip_rounds = True
   def bet(self, bid) -> int: return super()._bet(bid) 
 
-  def _add_scoreboard(self) -> None: super()._add_scoreboard(self._commands)
+  def _add_scoreboard(self) -> None: super()._add_scoreboard({
+            "Names": self.name,
+            "Hands": self.get_hand(),
+            "Score": self.score,
+            "Chips": self.chips,
+            "Status/Active": not self.is_done()
+        })
   
   def is_blackjack(self) -> bool: return len(self._hand) == 2 and self.true_score == 21
   def is_bust(self): return self._hand > 21
