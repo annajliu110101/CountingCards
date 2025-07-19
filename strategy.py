@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from .cards import Shoe
 
-class Strategy():
+class Strategy(ABC):
     """
     🎯 This is the base Strategy class — the 'brain blueprint' for Blackjack.
 
@@ -26,12 +26,9 @@ class Strategy():
     def __init__(self, player):
         self._player = player
         self._autobet = 100
-
+    
+    @abstractmethod
     def autobet(self, deck):
-        return self._player.bet(self._autobet)
-
-    def add_player(self, player):
-        self._player = player
 
     @abstractmethod
     def decide(self, deck:Shoe):
