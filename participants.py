@@ -80,14 +80,14 @@ class Participant:
   def display(self): pass
 
 class BlackjackPlayer(Participant):
-  def __init__(self, name, chips = 10000, strategy = Strategy):
-        if strategy is not None:
-          try:
-            super().__init__(name, chips, strategy(self))
-          except TypeError:
+  def __init__(self, name, chips = 10000, strategy = None):
+        if strategy is None:
             super().__init__(name, chips, Strategy(self))
         else:
-            super().__init__(name, chips, Strategy(self))
+            try:
+                super().__init__(name, chips, strategy(self))
+            except TypeError:
+                super().__init__(name, chips, Strategy(self))
           
         self._lost = False
 
