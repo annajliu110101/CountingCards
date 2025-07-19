@@ -80,9 +80,9 @@ class Participant:
   def display(self): pass
 
 class BlackjackPlayer(Participant):
-  def __init__(self, name, chips = 10000, strategy = None):
+  def __init__(self, name, chips = 10000, strategy: Optional[Strategy] = None):
         super().__init__(name, chips)
-        self._strategy = strategy(self) or None
+        self._strategy = strategy(self) if strategy else None
         self._lost = False
 
   def stand(self) -> None: self._skip_rounds = True
