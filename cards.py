@@ -1,15 +1,16 @@
 import base64
 import io
 import random
-from typing import List
-from collections import defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
-from IPython.display import DisplayHandle, display
 
+from typing import List
+from collections import defaultdict
+from IPython.display import DisplayHandle, display
+from .playingcards import PlayingCard, DefaultCardComparer, BlackjackCardComparer
 from ._utils import CardInfo
 ALL_RANKS = list(CardInfo.NAMES.keys())
-from .playingcards import PlayingCard, DefaultCardComparer, BlackjackCardComparer
+
 
 class Hand():
     def __init__(self, cards = None):
