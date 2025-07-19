@@ -1,10 +1,6 @@
 from abc import ABC, abstractmethod
-from participants import BlackjackPlayer, Dealer
-from game import Game
-
-# @title Default title text
-from abc import ABC, abstractmethod
-
+from .participants import BlackjackPlayer, Dealer
+from .game import Game
 
 class Strategy():
     """
