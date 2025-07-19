@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .game import Game
+from .cards import Shoe
 
 class Strategy():
     """
@@ -27,7 +27,7 @@ class Strategy():
         self._player = player
         self._autobet = 100
 
-    def autobet(self, game):
+    def autobet(self, deck):
         return self._player.bet(self._autobet)
 
     def add_player(self, player):
@@ -63,14 +63,14 @@ class DealerStrategy(Strategy):
     def __init__(self, player):
         super().__init__(player)
 
-    def autobet(self, game):
+    def autobet(self, deck):
         pass  # dealer doesn't bet
 
     def decide(self, game: Game, verbose: bool = False) -> None:
         if self._player.score < 17:
-            game.deal(self._player, verbose=verbose)
+            return True
         else:
-            game.skip(self._player, verbose=verbose)
+            return False
 
 class HiLoStrategy(Strategy):
     """
@@ -100,7 +100,7 @@ class HiLoStrategy(Strategy):
     def __init__(self, player):
         super().__init__(player)
 
-    def autobet(self, game:Game):
+    def autobet(self, deck):
         """
         💰 Smarter betting using card counts.
 
@@ -112,15 +112,13 @@ class HiLoStrategy(Strategy):
         This works *exactly* like our Hi-Lo count from the decide() method.
         """
 
-        card_counts = game.stats.count_remaining_cards()
-        if game._round == 0:
-          return self._player.bet(self._autobet)
+        card_counts = deck.stats.count_remaining_cards()
         count = 0
         for card, qty in card_counts.items():
             rank = str(card.rank)
             if rank in ['2', '3', '4', '5', '6']:
                 count += qty
-            elif rank in ['10', 'J', 'Q', 'K', 'A']:
+            elif rank in ['10', 'J', 'Q', 'K']:
                 count -= qty
 
         # Normalize to get "true count" if you want (not shown here)
@@ -137,20 +135,20 @@ class HiLoStrategy(Strategy):
             return self._player.bet(25)   # ❄️ not favorable — play cautious
 
 
-    def decide(self, game: Game, verbose = False) -> None:
+    def decide(self, deck: Shoe, verbose = False) -> None:
         """
         Called automatically during the game when it’s this player’s turn.
         """
         score = self._player.score
 
-        card_counts = game.stats.count_all_cards_dealt()
+        card_counts = deck.stats.count_all_cards_dealt()
         count = 0
 
         for card, qty in card_counts.items():
             rank = str(card.rank)
             if rank in ['2', '3', '4', '5', '6']:
                 count += qty
-            elif rank in ['10', 'J', 'Q', 'K', 'A']:
+            elif rank in ['10', 'J', 'Q', 'K']:
                 count -= qty
             # 7, 8, 9 → count += 0 (ignored)
 
@@ -164,18 +162,18 @@ class HiLoStrategy(Strategy):
         if count > 5:
             # Be aggressive
             if score < 18:
-                game.deal(self._player, verbose = verbose)
+                return True
             else:
-                game.skip(self._player, verbose = verbose)
+                return False
         elif count < -5:
             # Be cautious
             if score < 12:
-                game.deal(self._player, verbose = verbose)
+                return True
             else:
-                game.skip(self._player, verbose)
+                return False
         else:
             # Neutral
             if score < 16:
-                game.deal(self._player, verbose)
+                return True
             else:
-                game.skip(self._player, verbose)
+                return False
