@@ -13,7 +13,7 @@ class Participant:
     self._hand = Hand()
 
     if isinstance(strategy, Strategy):
-        self._strategy = strategy(self)
+        self._strategy = strategy
     else:
         self._strategy = None
     
@@ -85,7 +85,10 @@ class Participant:
 
 class BlackjackPlayer(Participant):
   def __init__(self, name, chips = 10000, strategy: Optional[Strategy] = None):
-        super().__init__(name, chips, strategy)
+        if strategy is None:
+            super().__init__(name, chips)
+        else:
+            super().__init__(name, chips, strategy(self))
         self._lost = False
 
   def stand(self) -> None: self._skip_rounds = True
