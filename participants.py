@@ -163,15 +163,15 @@ class Dealer(BlackjackPlayer):
     def reset(self):
         super().reset()
         self._reveal = False
+    
 
     def peek(self) -> bool:
-        if self._reveal or not self._get_up_card().is_facecard(): return False     
-        return self.hand.scoring_algorithm(False).__contains__(21) and self.reveal()
+        if self._get_up_card().name in ["10", "ace"] and self._hand.scoring_algorithm(False).__contains__(21):
+            self.reveal()
+            return True
         return False
 
     def reveal(self) -> PlayingCard:
-        if self._reveal: 
-          return None
         self._reveal = True
         card = self._get_hole_card().reveal()
         if self.is_bust(): 
