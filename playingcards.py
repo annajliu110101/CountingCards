@@ -1,19 +1,20 @@
 from pathlib import Path
+from typing import Optional
 
 ROOT = Path(__file__).parent.resolve()
 
 
 class DefaultCardComparer:
   @staticmethod
-  def equals(card1, card2):
+  def equals(card1:PlayingCard, card2:PlayingCard):
       return card1.code == card2.code
 
   @staticmethod
-  def hash(card):
+  def hash(card:PlayingCard):
       return hash(card.code)
 
   @staticmethod
-  def get_score(card):
+  def get_score(card:PlayingCard):
     if card.rank == "A":
       return 11
     elif card.rank.isdigit():
@@ -23,15 +24,15 @@ class DefaultCardComparer:
 
 class BlackjackCardComparer:
   @staticmethod
-  def equals(card1, card2):
+  def equals(card1:PlayingCard, card2:PlayingCard):
       return card1.rank == card2.rank
 
   @staticmethod
-  def hash(card):
+  def hash(card:PlayingCard):
       return hash(card.rank)
 
   @staticmethod
-  def get_score(card):
+  def get_score(card:PlayingCard):
     if card.rank == "A":
       return 11
     elif card.rank.isdigit():
@@ -40,7 +41,7 @@ class BlackjackCardComparer:
       return 10
 
   @staticmethod
-  def get_values(card):
+  def get_values(card:PlayingCard):
     if card.rank == "A":
       return (1, 11)
     return (BlackjackCardComparer.get_score(card),)
