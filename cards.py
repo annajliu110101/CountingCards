@@ -71,12 +71,14 @@ class Hand():
 
     def true_score(self):
         totals = self.scoring_algorithm(False)
-        return max([t for t in totals if t <= 21]) or min(totals)
+        legal = [t for t in totals if t <= 21]
+        return max(legal) if legal else min(totals)
 
     @property
     def score(self):
         totals = self.scoring_algorithm()
-        return max([t for t in totals if t <= 21]) or min(totals)
+        legal = [t for t in totals if t <= 21]
+        return max(legal) if legal else min(totals)
 
     @property
     def cards(self): return self.view()
@@ -189,7 +191,8 @@ class Stats:
             for v in value:
                new_totals.add(t + v)
             totals = new_totals
-        return max([t for t in totals if t <= 21]) or min(totals)
+        legal = [t for t in totals if t <= 21]
+        return max(legal) if legal else min(totals)
 
     def counter_df(self, mode = ""):
         rank_counts = self.counter(mode)
