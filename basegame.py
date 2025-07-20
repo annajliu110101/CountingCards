@@ -222,4 +222,3 @@ class Blackjack(Game):
     	flash_line(out_message.format(player.name, net)
     	player.settle(winnings)
     	self._pot -= winnings
-  
