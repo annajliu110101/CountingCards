@@ -6,15 +6,15 @@ ROOT = Path(__file__).parent.resolve()
 
 class DefaultCardComparer:
   @staticmethod
-  def equals(card1:PlayingCard, card2:PlayingCard):
+  def equals(card1, card2):
       return card1.code == card2.code
 
   @staticmethod
-  def hash(card:PlayingCard):
+  def hash(card):
       return hash(card.code)
 
   @staticmethod
-  def get_score(card:PlayingCard):
+  def get_score(card):
     if card.rank == "A":
       return 11
     elif card.rank.isdigit():
@@ -24,15 +24,15 @@ class DefaultCardComparer:
 
 class BlackjackCardComparer:
   @staticmethod
-  def equals(card1:PlayingCard, card2:PlayingCard):
+  def equals(card1, card2):
       return card1.rank == card2.rank
 
   @staticmethod
-  def hash(card:PlayingCard):
+  def hash(card):
       return hash(card.rank)
 
   @staticmethod
-  def get_score(card:PlayingCard):
+  def get_score(card):
     if card.rank == "A":
       return 11
     elif card.rank.isdigit():
@@ -41,7 +41,7 @@ class BlackjackCardComparer:
       return 10
 
   @staticmethod
-  def get_values(card:PlayingCard):
+  def get_values(card):
     if card.rank == "A":
       return (1, 11)
     return (BlackjackCardComparer.get_score(card),)
