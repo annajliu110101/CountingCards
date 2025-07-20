@@ -123,7 +123,6 @@ class Blackjack(Game):
     player.hit(card)
     if verbose:
         flash_line(f"{player.name} drew {str(card)}")
-
     return card
 
   def skip(self, player, verbose = True):
@@ -144,9 +143,7 @@ class Blackjack(Game):
           self._round += 1
           for p in self._all_active_players:
               self.deal(p)
-    
       blackjack_players = [p for p in self._active_players if p.is_blackjack()]
-      
       if not blackjack_players:
         return False
 
