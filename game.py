@@ -82,14 +82,12 @@ class Game(ABC):
       bet = self._prompt_bet(player)
       self._pot += bet
 
-  def next(self, player, verbose = False):
+  def next(self, player, verbose = True):
       if player.has_strategy():
-          if verbose:
-              print(f"{player.name}, Your Current Score is {player.score}.")
-          if player.strategy.decide(self._deck, verbose = True):
-              self.deal(player, verbose = True)
+          if player.strategy.decide(self._deck, verbose = verbose):
+              self.deal(player, verbose = verbose)
           else:
-              self.skip(player, verbose = False)
+              self.skip(player, verbose = verbose)
       else:
           action = input(f"{player.name}, Your Current Score is {player.score}.\nPress 'y' to 'hit', or press any other key to 'stand': \n")
           if action.lower() == 'y':
@@ -119,8 +117,7 @@ class Blackjack(Game):
     super().__init__(players, self._dealer, BlackjackCardComparer)
 
   def deal(self, player, verbose = True):
-    card = self._deck.draw()
-    player.hit(card)
+    card = player.hit(self._deck.draw())
     if verbose:
         flash_line(f"{player.name} drew {str(card)}")
     return card
